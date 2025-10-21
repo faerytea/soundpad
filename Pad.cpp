@@ -249,11 +249,11 @@ bool Pad::render(ImVec2 &size, bool interactive, ImFont *letterFont) {
     ImGui::PushFont(letterFont, size.y);// * 10 / 8);
     auto letterSize = ImGui::CalcTextSize(&letter, &letter + 1);
     auto letterTL = ImVec2(pos.x + (size.x - letterSize.x)/2, pos.y + (size.y - letterSize.y)/2);
-    draw->AddRect(letterTL, ImVec2(letterTL.x + letterSize.x, letterTL.y + letterSize.y), IM_COL32(150, 0, 150, 255), 0, 0, 1);
+    // draw->AddRect(letterTL, ImVec2(letterTL.x + letterSize.x, letterTL.y + letterSize.y), IM_COL32(150, 0, 150, 255), 0, 0, 1);
     // draw->AddText(nullptr, size.y, pos, IM_COL32(100, 100, 100, 255), &label, &label + 1);
     draw->AddText(letterTL, IM_COL32(80, 80, 80, 255), &letter, &letter + 1);
     ImGui::PopFont();
-    auto nameSize = ImGui::CalcTextSize(name.c_str(), __null, false, size.x);
+    auto nameSize = ImGui::CalcTextSize(name.c_str(), 0, false, size.x);
     auto namePos = ImVec2(pos.x + (size.x - nameSize.x) / 2, pos.y + (size.y - nameSize.y) / 2);
     draw->AddRectFilled(namePos, ImVec2(namePos.x + nameSize.x, namePos.y + nameSize.y), IM_COL32(128, 128, 128, 128));
     draw->AddText(nullptr, 0, namePos, IM_COL32(255, 255, 255, 255), name.c_str(), nullptr, size.x);
@@ -274,10 +274,18 @@ bool Pad::volume(float volume) {
     return res;
 }
 
+#ifdef _MSC_VER // 0.f / 0.f is not permitted, so we need limits<float>::nan to acquire nan
+#include <limits>
+#endif // _MSC_VER
+
 float Pad::volume() {
     if (track.empty()) {
         SDL_Log("No tracks on pad %c?..", letter);
+#ifdef _MSC_VER
+        return std::numeric_limits<float>::quiet_NaN();
+#else // any sane compiler
         return 0.f / 0.f;
+#endif // _MSC_VER
     }
     return MIX_GetTrackGain(track[0]);
 }

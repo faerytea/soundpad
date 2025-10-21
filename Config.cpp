@@ -1,5 +1,7 @@
 #include "Config.hpp"
 #include <fstream>
+#include <string>
+#include <sstream>
 #include <filesystem>
 #include <unordered_map>
 
@@ -19,16 +21,16 @@ AppConfig *loadAppConfig() {
     // appCfg.appdir = prefsDir;
     // std::filesystem::path appDir(prefsDir);
     //new (&appCfg.appdir) std::filesystem::path(prefsDir);
-    std::filesystem::path appDir = std::filesystem::path(prefsDir);
+    std::filesystem::path appDir = std::filesystem::u8path(prefsDir);
     res->appdir = appDir;
-    res->baseRoot = std::filesystem::path(SDL_GetUserFolder(SDL_Folder::SDL_FOLDER_MUSIC));
+    res->baseRoot = std::filesystem::u8path(SDL_GetUserFolder(SDL_Folder::SDL_FOLDER_MUSIC));
     if (!std::filesystem::exists(appDir)) {
         if (!std::filesystem::create_directories(appDir)) {
             SDL_Log("Failed to create prefs dir %s", prefsDir.c_str());
             return nullptr;
         }
     }
-    SDL_Log("App dir: %s", res->appdir.c_str());
+    SDL_Log("App dir: %s", res->appdir.u8string().c_str());
     // load config
     std::ifstream cfg(appDir / "config.ini");
     std::string monoTTF = "", regularTTF = "";
@@ -49,7 +51,7 @@ AppConfig *loadAppConfig() {
             if (key == "autosave") {
                 res->autosave = (value == "1" || value == "true" || value == "yes");
             } else if (key == "baseroot") {
-                auto tmpPath = std::filesystem::path(value);
+                auto tmpPath = std::filesystem::u8path(value);
                 if (std::filesystem::exists(tmpPath)) {
                     res->baseRoot = tmpPath;
                 } else {
@@ -93,11 +95,11 @@ AppConfig *loadAppConfig() {
                 }
             }
         } else {
-            SDL_Log("Profiles path %s exists but is not a directory", profiles.c_str());
+            SDL_Log("Profiles path %s exists but is not a directory", profiles.u8string().c_str());
         }
     } else {
         if (!std::filesystem::create_directories(profiles)) {
-            SDL_Log("Failed to create profiles dir %s", profiles.c_str());
+            SDL_Log("Failed to create profiles dir %s", profiles.u8string().c_str());
         }
     }
     SDL_Log("Got %ld profiles", res->profiles.size());
@@ -137,10 +139,10 @@ SoundPad *createDefault(MIX_Mixer *mixer) {
 const int ctrl = 1, shift = 2, alt = 4, playing = 8;
 
 SoundPad *loadSoundPad(std::filesystem::path &path, MIX_Mixer *mixer) {
-    SDL_Log("Loading soundpad config from %s", path.c_str());
+    SDL_Log("Loading soundpad config from %s", path.u8string().c_str());
     std::ifstream cfg(path);
     if (!cfg.is_open()) {
-        SDL_Log("Failed to open pad config %s", path.c_str());
+        SDL_Log("Failed to open pad config %s", path.u8string().c_str());
         return createDefault(mixer);
     }
 
@@ -163,7 +165,7 @@ SoundPad *loadSoundPad(std::filesystem::path &path, MIX_Mixer *mixer) {
     }
     SDL_Log("Loaded %ld rows", rows.size());
     if (rows.empty()) {
-        SDL_Log("No rows in config %s, creating default", path.c_str());
+        SDL_Log("No rows in config %s, creating default", path.u8string().c_str());
         return createDefault(mixer);
     }
 
@@ -189,12 +191,12 @@ SoundPad *loadSoundPad(std::filesystem::path &path, MIX_Mixer *mixer) {
         char c = toupper(line[0]);
         auto pp = padMap[c];
         if (!pp) {
-            SDL_Log("No pad for key %c in config %s, while its config exists", c, path.c_str());
+            SDL_Log("No pad for key %c in config %s, while its config exists", c, path.u8string().c_str());
             while (std::getline(cfg, line) && !line.empty()); // skip to next
             continue;
         }
         auto songPath = line.substr(2);
-        if (!songPath.empty() && pp->loadSound(base / songPath)) {
+        if (!songPath.empty() && pp->loadSound((base / songPath).u8string())) {
             SDL_Log("Loaded sound %s on pad %c", pp->name.c_str(), c);
         } else {
             SDL_Log("Failed to load sound %s on pad %c", songPath.c_str(), c);
@@ -227,7 +229,7 @@ SoundPad *loadSoundPad(std::filesystem::path &path, MIX_Mixer *mixer) {
             case ' ':
                 break;
             default:
-                SDL_Log("Unknown request char %c for pad %c in config %s", c, pp->letter, path.c_str());
+                SDL_Log("Unknown request char %c for pad %c in config %s", c, pp->letter, path.u8string().c_str());
                 break;
             }
             pp->table[(i & ctrl)][(i & shift) >> 1][(i & alt) >> 2][(i & playing) >> 3] = r;
@@ -247,7 +249,7 @@ SoundPad *loadSoundPad(std::filesystem::path &path, MIX_Mixer *mixer) {
 bool saveSoundPad(std::filesystem::path &path, SoundPad *pad) {
     std::ofstream cfg(path);
     if (!cfg.is_open()) {
-        SDL_Log("Failed to open pad config %s for writing", path.c_str());
+        SDL_Log("Failed to open pad config %s for writing", path.u8string().c_str());
         return false;
     }
 
@@ -290,7 +292,7 @@ bool saveSoundPad(std::filesystem::path &path, SoundPad *pad) {
                     c = 'h';
                     break;
                 default:
-                    SDL_Log("Unknown request %d for pad %c in config %s", r, p.letter, path.c_str());
+                    SDL_Log("Unknown request %d for pad %c in config %s", r, p.letter, path.u8string().c_str());
                     break;
                 }
                 cfg << c;
@@ -308,7 +310,7 @@ bool saveAppConfig(AppConfig *cfg) {
     auto &root = cfg->appdir;
     std::ofstream app(root / "config.ini");
     app << "autosave=" << cfg->autosave << std::endl;
-    app << "baseroot=" << cfg->baseRoot.string() << std::endl;
+    app << "baseroot=" << cfg->baseRoot.u8string() << std::endl;
     app << "font=" << cfg->fontFiles.first << std::endl;
     app << "monofont=" << cfg->fontFiles.second << std::endl;
     app.close();

@@ -68,4 +68,10 @@ std::pair<std::string, std::string> getDefaultFontFiles() {
 
 #else // assume windows
 
+// we'll use lucon.ttf and tahoma.ttf, 'cause HFONT wont get us .ttf link
+
+std::pair<std::string, std::string> getDefaultFontFiles() {
+    return std::pair("C:\\Windows\\Fonts\\tahoma.ttf", "C:\\Windows\\Fonts\\lucon.ttf");
+}
+
 #endif

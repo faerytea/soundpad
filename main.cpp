@@ -86,7 +86,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
     *appstate = new AppState();
 
-    SDL_Log("Appdir: %s", appCfg->appdir.c_str());
+    SDL_Log("Appdir: %s", appCfg->appdir.u8string().c_str());
 
     // SDL_SetRenderLogicalPresentation(renderer, 1280 * main_scale, 800 * main_scale, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
@@ -139,16 +139,16 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         ImGui::Begin("Select profile", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
         for (auto pi = appCfg->profiles.begin(); pi != appCfg->profiles.end();) {
             auto &p = *pi;
-            auto tp = std::string(p.filename().stem().c_str());
+            auto tp = p.filename().stem().u8string();
             if (ImGui::Button((std::string("X##") + tp).c_str())) {
                 std::filesystem::remove(p);
-                std::filesystem::remove_all(std::filesystem::path(tp) / "");
+                std::filesystem::remove_all(std::filesystem::u8path(tp) / "");
                 appCfg->profiles.erase(pi);
             } else {
                 ++pi;
             }
             ImGui::SameLine();
-            if (ImGui::Button(p.filename().c_str(), ImVec2(-1, 0))) {
+            if (ImGui::Button(p.filename().u8string().c_str(), ImVec2(-1, 0))) {
                 SoundPad *newPad = loadSoundPad(p, mixer);
                 state->selected = newPad;
                 state->currentProfile = p;
@@ -158,7 +158,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         static char newProfileName[254];
         ImGui::InputTextWithHint("##new profile", "new profile", newProfileName, sizeof(newProfileName) - 4);
         if (ImGui::Button("Create", ImVec2(-1, 0))) {
-            SDL_Log("Appdir on click: %s", appCfg->appdir.c_str());
+            SDL_Log("Appdir on click: %s", appCfg->appdir.u8string().c_str());
             std::string_view newNameView(newProfileName);
             auto len = newNameView.size();
             SDL_Log("Creating new profile '%s'", newProfileName);
@@ -168,20 +168,20 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                 newProfileName[len + 2] = 'f';
                 newProfileName[len + 3] = 'g';
                 newProfileName[len + 4] = 0;
-                auto newPath = appCfg->appdir / "profiles" / std::string_view(newProfileName);
+                auto newPath = appCfg->appdir / "profiles" / std::filesystem::u8path(newProfileName);
                 if (std::filesystem::exists(newPath)) {
-                    SDL_Log("Profile %s already exists", newPath.c_str());
+                    SDL_Log("Profile %s already exists", newPath.u8string().c_str());
                 } else {
                     std::filesystem::create_directories(newPath.parent_path());
                     SoundPad *newPad = createDefault(mixer);
                     if (newPad) {
                         static_cast<AppState *>(appstate)->selected = newPad;
-                        SDL_Log("Created new profile %s", newPath.c_str());
+                        SDL_Log("Created new profile %s", newPath.u8string().c_str());
                         saveSoundPad(newPath, newPad);
                         appCfg->profiles.push_back(newPath);
                         state->currentProfile = newPath;
                     } else {
-                        SDL_Log("Failed to create new profile %s", newPath.c_str());
+                        SDL_Log("Failed to create new profile %s", newPath.u8string().c_str());
                     }
                 }
             }
@@ -200,11 +200,11 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         if (appCfg->autosave) {
             ImGui::Text("Autosave enabled");
         } else {
-            if (ImGui::MenuItem(("Save " + state->currentProfile.filename().string()).c_str())) {
+            if (ImGui::MenuItem(("Save " + state->currentProfile.filename().u8string()).c_str())) {
                 if (saveSoundPad(state->currentProfile, state->selected)) {
-                    SDL_Log("Saved profile %s", state->currentProfile.c_str());
+                    SDL_Log("Saved profile %s", state->currentProfile.u8string().c_str());
                 } else {
-                    SDL_Log("Failed to save profile %s", state->currentProfile.c_str());
+                    SDL_Log("Failed to save profile %s", state->currentProfile.u8string().c_str());
                 }
             }
         }
@@ -215,12 +215,12 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                     [](void *userdata, const char * const *filelist, int filter) {
                         if (filelist && filelist[0]) {
                             auto p = static_cast<AppConfig *>(userdata);
-                            p->baseRoot = std::filesystem::path(filelist[0]);
+                            p->baseRoot = std::filesystem::u8path(filelist[0]);
                         }
                     },
                     appCfg,
                     window,
-                    appCfg->baseRoot.c_str(),//"/home/faerytea/.steam/debian-installation/steamui/sounds/", // tmp
+                    appCfg->baseRoot.u8string().c_str(),//"/home/faerytea/.steam/debian-installation/steamui/sounds/", // tmp
                     false
                 );
             }
@@ -279,7 +279,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                     window,
                     nullptr,
                     0,
-                    appCfg->baseRoot.c_str(),//"/home/faerytea/.steam/debian-installation/steamui/sounds/", // tmp
+                    appCfg->baseRoot.u8string().c_str(),//"/home/faerytea/.steam/debian-installation/steamui/sounds/", // tmp
                     false
                 );
             }
@@ -312,11 +312,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
             }
             ImGui::End();
         }
-        ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Appearing);
-        ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiCond_Always);
-        ImGui::Begin("style");
-        ImGui::ShowStyleEditor();
-        ImGui::End();
     }
 
     ImGui::Render();
