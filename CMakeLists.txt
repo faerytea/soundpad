@@ -1,93 +1,50 @@
 cmake_minimum_required(VERSION 3.21)
 project(soundpad LANGUAGES C CXX)
 
-# ============================================================
-# НАСТРОЙКИ ПОЛЬЗОВАТЕЛЯ
-# ============================================================
-# Пример вызова:
-#   cmake -DTARGET=win-release -DSTATIC_LINK=ON ..
-#
-# TARGET может быть одним из:
-#   linux-debug | linux-release | win-debug | win-release
-#
-# ============================================================
-
-if(NOT DEFINED TARGET)
-    set(TARGET linux-debug CACHE STRING "Target preset: linux-debug | linux-release | win-debug | win-release")
+if(NOT DEFINED STATIC) 
+    set(STATIC OFF CACHE BOOL "Link SDL statically (default OFF)")
 endif()
 
-if(NOT DEFINED STATIC_LINK)
-    set(STATIC_LINK OFF CACHE BOOL "Link SDL statically (default OFF)")
+if(STATIC)
+    set(SUFFIX "-static${CMAKE_STATIC_LIBRARY_SUFFIX}")
+else()
+    set(SUFFIX "-shared${CMAKE_SHARED_LIBRARY_SUFFIX}")
 endif()
 
-# ------------------------------------------------------------
-# НАСТРОЙКА КОМПИЛЯТОРА И ПЛАТФОРМЫ
-# ------------------------------------------------------------
+if(SDL3_DIR)
+    message(STATUS "Using SDL3_DIR: ${SDL3_DIR}")
+    set(SDL3_LIB ${SDL3_DIR}/lib/SDL3${SUFFIX})
+    set(SDL3_HEADERS ${SDL3_DIR}/include/)
+    if(NOT DEFINED SDL3_MIXER_DIR)
+        set(SDL3_MIXER_DIR ${SDL3_DIR} CACHE PATH "Path to SDL_mixer 3 installation")
+    endif()
+else()
+    find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-${SUFFIX})
+    set(SDL3_LIB SDL3::SDL3)
+    set(SDL3_HEADERS ${SDL3_LIB}/include/)
+    message(STATUS "Using default SDL3_DIR: ${SDL3_DIR}")
+endif()
+
+if(SDL3_MIXER_DIR)
+    message(STATUS "Using SDL3_MIXER_DIR: ${SDL3_MIXER_DIR}")
+    set(SDL3_MIXER_LIB ${SDL3_MIXER_DIR}/lib/SDL3_mixer${SUFFIX})
+    set(SDL3_MIXER_HEADERS ${SDL3_MIXER_DIR}/include/)
+else()
+    find_package(SDL3_mixer REQUIRED CONFIG REQUIRED COMPONENTS SDL3_mixer-${SUFFIX})
+    set(SDL3_MIXER_LIB SDL3_mixer::SDL3_mixer)
+    set(SDL3_MIXER_HEADERS ${SDL3_MIXER_LIB}/include/)
+    message(STATUS "Using default SDL3_MIXER_DIR: ${SDL3_MIXER_DIR}")
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-string(TOLOWER "${TARGET}" TARGET_LOWER)
-
-#if(TARGET_LOWER MATCHES "^win")
-#    message(STATUS "Configuring for Windows (cross-compile via MinGW)")
-#
-#    set(CMAKE_SYSTEM_NAME Windows)
-#    set(CMAKE_SYSTEM_VERSION 1)
-#    set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
-#    set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
-#    set(CMAKE_RC_COMPILER x86_64-w64-mingw32-windres)
-#
-#    set(IS_WINDOWS TRUE)
-#    set(IS_LINUX FALSE)
-#else()
-#    message(STATUS "Configuring for native Linux build")
-#    set(IS_WINDOWS FALSE)
-#    set(IS_LINUX TRUE)
-#endif()
-
-# ------------------------------------------------------------
-# РЕЖИМ СБОРКИ (Debug / Release)
-# ------------------------------------------------------------
-
-if(TARGET_LOWER MATCHES "debug")
-    set(CMAKE_BUILD_TYPE Debug)
-else()
-    set(CMAKE_BUILD_TYPE Release)
-endif()
-
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Static link: ${STATIC_LINK}")
-
-# ============================================================
-# ПУТИ К SDL3 и SDL_mixer
-# ============================================================
-
-
-set(SDL3_INCLUDE_DIR "${SDL3_DIR}/include")
-set(SDL3MIXER_INCLUDE_DIR "${SDL3MIXER_DIR}/include")
-
-if(STATIC_LINK)
-    if(IS_WINDOWS)
-        set(SDL3_LIBRARY "${SDL3_DIR}/lib/SDL3-static.lib")
-        set(SDL3MIXER_LIBRARY "${SDL3MIXER_DIR}/lib/SDL3_mixer-static.lib")
-    else()
-        set(SDL3_LIBRARY "${SDL3_DIR}/lib/libSDL3.a")
-        set(SDL3MIXER_LIBRARY "${SDL3MIXER_DIR}/lib/libSDL3_mixer.a")
-    endif()
-else()
-    if(IS_WINDOWS)
-        set(SDL3_LIBRARY "${SDL3_DIR}/lib/SDL3.dll")
-        set(SDL3MIXER_LIBRARY "${SDL3MIXER_DIR}/lib/SDL3_mixer.dll")
-    else()
-        set(SDL3_LIBRARY "${SDL3_DIR}/lib/libSDL3.so")
-        set(SDL3MIXER_LIBRARY "${SDL3MIXER_DIR}/lib/libSDL3_mixer.so")
-    endif()
-endif()
+message(STATUS "Static link: ${STATIC}")
 
 include_directories(
-    ${SDL3_INCLUDE_DIR}
-    ${SDL3MIXER_INCLUDE_DIR}
+    ${SDL3_HEADERS}
+    ${SDL3_MIXER_HEADERS}
     vendored/imgui/
     vendored/imgui/backends/
 )
@@ -112,8 +69,8 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    ${SDL3_LIBRARY}
-    ${SDL3MIXER_LIBRARY}
+    ${SDL3_LIB}
+    ${SDL3_MIXER_LIB}
 )
 
 if(IS_LINUX)
