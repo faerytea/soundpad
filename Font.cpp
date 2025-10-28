@@ -39,10 +39,10 @@ std::pair<std::string, std::string> getDefaultFontFiles() {
     auto monoPattern = FcPatternCreate();
     FcPatternAddString(monoPattern, FC_FONTFORMAT, reinterpret_cast<const FcChar8 *>("TrueType"));
     FcPatternAddInteger(monoPattern, FC_SPACING, FC_MONO);
-    FcPatternAddInteger(regularPattern, FC_WEIGHT, FC_WEIGHT_MEDIUM);
-    FcPatternAddInteger(regularPattern, FC_WIDTH, FC_WIDTH_NORMAL);
-    FcPatternAddInteger(regularPattern, FC_SLANT, FC_SLANT_ROMAN);
-    FcConfigSubstitute(fcConf, regularPattern, FcMatchPattern);
+    FcPatternAddInteger(monoPattern, FC_WEIGHT, FC_WEIGHT_MEDIUM);
+    FcPatternAddInteger(monoPattern, FC_WIDTH, FC_WIDTH_NORMAL);
+    FcPatternAddInteger(monoPattern, FC_SLANT, FC_SLANT_ROMAN);
+    FcConfigSubstitute(fcConf, monoPattern, FcMatchPattern);
 
     auto matchedMono = FcFontMatch(fcConf, monoPattern, &res);
     std::string monoFile;
@@ -65,6 +65,11 @@ std::pair<std::string, std::string> getDefaultFontFiles() {
 }
 
 #elif __APPLE__
+
+std::pair<std::string, std::string> getDefaultFontFiles() {
+    // TODO: implement proper macOS font lookup
+    return std::pair("embedded", "embedded");
+}
 
 #else // assume windows
 

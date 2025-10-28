@@ -105,7 +105,7 @@ public:
 
     bool loadSound(const std::string &path);
 
-    bool render(ImVec2 &size, bool interactive, ImFont *letterFont);
+    bool render(ImVec2 &size, bool interactive, ImFont *letterFont, float fontSize);
 
     bool processInput();
 

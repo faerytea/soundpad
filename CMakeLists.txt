@@ -6,31 +6,33 @@ if(NOT DEFINED STATIC)
 endif()
 
 if(STATIC)
-    set(SUFFIX "-static${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(SUFFIX "static")
+    set(LIBRARY_SUFFIX "${CMAKE_STATIC_LIBRARY_SUFFIX}")
 else()
-    set(SUFFIX "-shared${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    set(SUFFIX "shared")
+    set(LIBRARY_SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 endif()
 
-if(SDL3_DIR)
-    message(STATUS "Using SDL3_DIR: ${SDL3_DIR}")
-    set(SDL3_LIB ${SDL3_DIR}/lib/SDL3${SUFFIX})
-    set(SDL3_HEADERS ${SDL3_DIR}/include/)
+if(SDL3_ROOT_DIR)
+    message(STATUS "Using SDL3_ROOT_DIR: ${SDL3_ROOT_DIR}")
+    set(SDL3_LIB ${SDL3_ROOT_DIR}lib/libSDL3${LIBRARY_SUFFIX})
+    set(SDL3_HEADERS ${SDL3_ROOT_DIR}include/)
     if(NOT DEFINED SDL3_MIXER_DIR)
-        set(SDL3_MIXER_DIR ${SDL3_DIR} CACHE PATH "Path to SDL_mixer 3 installation")
+        set(SDL3_MIXER_DIR ${SDL3_ROOT_DIR} CACHE PATH "Path to SDL_mixer 3 installation")
     endif()
 else()
-    find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-${SUFFIX})
+    find_package(SDL3 3.3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-${SUFFIX})
     set(SDL3_LIB SDL3::SDL3)
     set(SDL3_HEADERS ${SDL3_LIB}/include/)
     message(STATUS "Using default SDL3_DIR: ${SDL3_DIR}")
 endif()
 
-if(SDL3_MIXER_DIR)
-    message(STATUS "Using SDL3_MIXER_DIR: ${SDL3_MIXER_DIR}")
-    set(SDL3_MIXER_LIB ${SDL3_MIXER_DIR}/lib/SDL3_mixer${SUFFIX})
-    set(SDL3_MIXER_HEADERS ${SDL3_MIXER_DIR}/include/)
+if(SDL3_MIXER_ROOT_DIR)
+    message(STATUS "Using SDL3_MIXER_ROOT_DIR: ${SDL3_MIXER_ROOT_DIR}")
+    set(SDL3_MIXER_LIB ${SDL3_MIXER_ROOT_DIR}lib/libSDL3_mixer${LIBRARY_SUFFIX})
+    set(SDL3_MIXER_HEADERS ${SDL3_MIXER_ROOT_DIR}include/)
 else()
-    find_package(SDL3_mixer REQUIRED CONFIG REQUIRED COMPONENTS SDL3_mixer-${SUFFIX})
+    find_package(SDL3_mixer 3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3_mixer-${SUFFIX})
     set(SDL3_MIXER_LIB SDL3_mixer::SDL3_mixer)
     set(SDL3_MIXER_HEADERS ${SDL3_MIXER_LIB}/include/)
     message(STATUS "Using default SDL3_MIXER_DIR: ${SDL3_MIXER_DIR}")
@@ -68,22 +70,28 @@ add_executable(${PROJECT_NAME}
     vendored/imgui/backends/imgui_impl_sdlrenderer3.cpp
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION 1.1.0)
+
 target_link_libraries(${PROJECT_NAME}
     ${SDL3_LIB}
     ${SDL3_MIXER_LIB}
 )
 
-if(IS_LINUX)
+if(STATIC AND MINGW)
+    target_link_libraries(${PROJECT_NAME} -static-libgcc -static-libstdc++)
+endif()
+
+if(UNIX)
     target_link_libraries(${PROJECT_NAME} pthread dl fontconfig)
-elseif(IS_WINDOWS)
-    target_link_libraries(${PROJECT_NAME} winmm imm32 version)
+elseif(WIN32)
+    target_link_libraries(${PROJECT_NAME} winmm imm32 version setupapi)
 endif()
 
 # ============================================================
 # ОТЛАДОЧНЫЕ СООБЩЕНИЯ
 # ============================================================
 message(STATUS "Platform: ${CMAKE_SYSTEM_NAME}")
-message(STATUS "SDL3 include: ${SDL3_INCLUDE_DIR}")
-message(STATUS "SDL3_mixer include: ${SDL3MIXER_INCLUDE_DIR}")
-message(STATUS "SDL3 lib: ${SDL3_LIBRARY}")
-message(STATUS "SDL3_mixer lib: ${SDL3MIXER_LIBRARY}")
+message(STATUS "SDL3 include: ${SDL3_HEADERS}")
+message(STATUS "SDL3_mixer include: ${SDL3_MIXER_HEADERS}")
+message(STATUS "SDL3 lib: ${SDL3_LIB}")
+message(STATUS "SDL3_mixer lib: ${SDL3_MIXER_LIB}")

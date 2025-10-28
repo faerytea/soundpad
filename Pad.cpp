@@ -203,7 +203,7 @@ MIX_Track *Pad::getIdleTrack() {
     return idle;
 }
 
-bool Pad::render(ImVec2 &size, bool interactive, ImFont *letterFont) {
+bool Pad::render(ImVec2 &size, bool interactive, ImFont *letterFont, float fontSize) {
     ImDrawList *draw = ImGui::GetWindowDrawList();
     ImVec2 pos = ImGui::GetCursorScreenPos();
 
@@ -246,12 +246,13 @@ bool Pad::render(ImVec2 &size, bool interactive, ImFont *letterFont) {
         draw->AddRect(pos, pMax, IM_COL32(0, 150, 0, 255), 0, 0, 1);
     }
 
-    ImGui::PushFont(letterFont, size.y);// * 10 / 8);
+    ImGui::PushFont(letterFont, fontSize);// * 10 / 8);
     auto letterSize = ImGui::CalcTextSize(&letter, &letter + 1);
     auto letterTL = ImVec2(pos.x + (size.x - letterSize.x)/2, pos.y + (size.y - letterSize.y)/2);
     // draw->AddRect(letterTL, ImVec2(letterTL.x + letterSize.x, letterTL.y + letterSize.y), IM_COL32(150, 0, 150, 255), 0, 0, 1);
     // draw->AddText(nullptr, size.y, pos, IM_COL32(100, 100, 100, 255), &label, &label + 1);
-    draw->AddText(letterTL, IM_COL32(80, 80, 80, 255), &letter, &letter + 1);
+    letterFont->RenderChar(draw, fontSize, letterTL, IM_COL32(200, 200, 200, 255), letter);
+    // draw->AddText(letterTL, IM_COL32(80, 80, 80, 255), &letter, &letter + 1);
     ImGui::PopFont();
     auto nameSize = ImGui::CalcTextSize(name.c_str(), 0, false, size.x);
     auto namePos = ImVec2(pos.x + (size.x - nameSize.x) / 2, pos.y + (size.y - nameSize.y) / 2);

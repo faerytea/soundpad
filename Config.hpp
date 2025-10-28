@@ -26,6 +26,8 @@ SoundPad *loadSoundPad(std::filesystem::path &path, MIX_Mixer *mixer);
 
 bool saveSoundPad(std::filesystem::path &path, SoundPad *pad);
 
+ImFont *getFont(std::string &path);
+
 AppConfig *loadAppConfig();
 
 bool saveAppConfig(AppConfig *cfg);

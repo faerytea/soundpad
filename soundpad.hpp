@@ -20,9 +20,13 @@ Pad *ShowSoundPad(SoundPad &pads, bool interactive, ImFont *letterFont) {
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
             unsigned padSize = std::min(viewport->WorkSize.y / h, viewport->WorkSize.x / w);
             auto size = ImVec2(padSize, padSize);
+            auto baked = letterFont->GetFontBaked(size.y);
+            auto hGlyph = baked->FindGlyph('H');
+            auto charHeight = hGlyph->Y1 - hGlyph->Y0;
+            //SDL_Log("Font size: %f, Y0 %f, Y1 %f, diff %f", size.y, hGlyph->Y0, hGlyph->Y1, charHeight);
             for (auto &row : pads) {
                 for (auto &pad : row) {
-                    if (pad.render(size, interactive, letterFont)) {
+                    if (pad.render(size, interactive, letterFont, (7.0/8.0) * size.y * (size.y / charHeight))) {
                         options = &pad;
                     }
                     ImGui::SameLine();

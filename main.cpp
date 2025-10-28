@@ -2,12 +2,24 @@
 #include <SDL3/SDL_main.h>
 #include "soundpad.hpp"
 #include "Config.hpp"
+#include "Font.hpp"
 
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static MIX_Mixer *mixer = NULL;
 static AppConfig *appCfg = nullptr;
+
+const SDL_DialogFileFilter ttfFileFilter = { "TrueType Font", "ttf" };
+const char *defaultFontDir =
+#ifdef _WIN32
+                            "C:\\Windows\\Fonts\\"
+#elif __APPLE__
+                            "/Library/Fonts/"
+#else
+                            "/usr/share/fonts/truetype/"
+#endif
+;
 
 struct AppState {
     SoundPad *selected = nullptr;
@@ -223,6 +235,82 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                     appCfg->baseRoot.u8string().c_str(),//"/home/faerytea/.steam/debian-installation/steamui/sounds/", // tmp
                     false
                 );
+            }
+            if (ImGui::BeginMenu("Fonts")) {
+                auto regularPath = appCfg->fontFiles.first.empty() ? "embedded" : appCfg->fontFiles.first;
+                auto regularLastSlash = regularPath.find_last_of("/\\");
+                auto regularName = regularPath.substr(regularLastSlash == std::string::npos ? 0 : regularLastSlash + 1);
+                if (ImGui::MenuItem(("Regular: " + regularName).c_str())) {
+                    SDL_ShowOpenFileDialog(
+                        [](void *userdata, const char * const *filelist, int filter) {
+                            if (filelist && filelist[0]) {
+                                auto p = static_cast<AppConfig *>(userdata);
+                                auto ttf = std::filesystem::u8path(filelist[0]);
+                                p->fontFiles.first = ttf.u8string();
+                                auto &io = ImGui::GetIO();
+                                p->fontRegular = getFont(p->fontFiles.first);
+                                io.FontDefault = p->fontRegular;
+                                saveAppConfig(p);
+                            }
+                        },
+                        appCfg,
+                        window,
+                        &ttfFileFilter,
+                        1,
+                        regularLastSlash == std::string::npos
+                            ? defaultFontDir
+                            : std::filesystem::u8path(regularPath.substr(0, regularLastSlash)).u8string().c_str(),
+                        false
+                    );
+                }
+                if (ImGui::MenuItem("Reset to embedded##regular", nullptr, false, regularPath != "embedded")) {
+                    appCfg->fontFiles.first = "embedded";
+                    auto &io = ImGui::GetIO();
+                    appCfg->fontRegular = getFont(appCfg->fontFiles.first);
+                    saveAppConfig(appCfg);
+                }
+                ImGui::Separator();
+                auto monoPath = appCfg->fontFiles.second.empty() ? "embedded" : appCfg->fontFiles.second;
+                auto monoLastSlash = monoPath.find_last_of("/\\");
+                auto monoName = monoPath.substr(monoLastSlash == std::string::npos ? 0 : monoLastSlash + 1);
+                if (ImGui::MenuItem(("Mono: " + monoName).c_str())) {
+                    SDL_ShowOpenFileDialog(
+                        [](void *userdata, const char * const *filelist, int filter) {
+                            if (filelist && filelist[0]) {
+                                auto p = static_cast<AppConfig *>(userdata);
+                                auto ttf = std::filesystem::u8path(filelist[0]);
+                                p->fontFiles.second = ttf.u8string();
+                                auto &io = ImGui::GetIO();
+                                p->fontMono = getFont(p->fontFiles.second);
+                                saveAppConfig(p);
+                            }
+                        },
+                        appCfg,
+                        window,
+                        &ttfFileFilter,
+                        1,
+                        monoLastSlash == std::string::npos
+                            ? defaultFontDir
+                            : std::filesystem::u8path(monoPath.substr(0, monoLastSlash)).u8string().c_str(),
+                        false
+                    );
+                }
+                if (ImGui::MenuItem("Reset to embedded##mono", nullptr, false, monoPath != "embedded")) {
+                    appCfg->fontFiles.second = "embedded";
+                    auto &io = ImGui::GetIO();
+                    appCfg->fontMono = getFont(appCfg->fontFiles.second);
+                    saveAppConfig(appCfg);
+                }
+                ImGui::Separator();
+                if (ImGui::MenuItem("Reset to system's default")) {
+                    appCfg->fontFiles = getDefaultFontFiles();
+                    auto &io = ImGui::GetIO();
+                    appCfg->fontRegular = getFont(appCfg->fontFiles.first);
+                    io.FontDefault = appCfg->fontRegular;
+                    appCfg->fontMono = getFont(appCfg->fontFiles.second);
+                    saveAppConfig(appCfg);
+                }
+                ImGui::EndMenu();
             }
             ImGui::EndMenu();
         }

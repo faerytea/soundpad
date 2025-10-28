@@ -15,6 +15,19 @@ std::string_view trim(std::string_view s) {
     return s.substr(start, end - start);
 }
 
+ImFont *getFont(std::string &path) {
+    auto &io = ImGui::GetIO();
+    if (path == "embedded" || path.empty()) {
+        return io.Fonts->AddFontDefault();
+    }
+    ImFont *font = io.Fonts->AddFontFromFileTTF(path.c_str());
+    if (!font) {
+        SDL_Log("Failed to load font from %s, using default", path.c_str());
+        font = io.Fonts->AddFontDefault();
+    }
+    return font;
+}
+
 AppConfig *loadAppConfig() {
     auto res = new AppConfig();
     std::string prefsDir(SDL_GetPrefPath("faerytea", "soundpad"));
@@ -78,8 +91,14 @@ AppConfig *loadAppConfig() {
     }
     SDL_Log("Loading '%s' and '%s'", regularTTF.c_str(), monoTTF.c_str());
     auto &io = ImGui::GetIO();
-    auto *regular = regularTTF.empty() ? io.Fonts->AddFontDefault() : io.Fonts->AddFontFromFileTTF(regularTTF.c_str());
-    auto *mono = monoTTF.empty() ? io.Fonts->AddFontDefault() : io.Fonts->AddFontFromFileTTF(monoTTF.c_str());
+    auto *regular = getFont(regularTTF);
+    auto *mono = getFont(monoTTF);
+    if (regular->GetDebugName() == "ProggyClean.ttf") {
+        regularTTF = "embedded";
+    }
+    if (mono->GetDebugName() == "ProggyClean.ttf") {
+        monoTTF = "embedded";
+    }
     res->fontFiles = std::pair(regularTTF, monoTTF);
     SDL_Log("Using '%s' as monospace font", mono->GetDebugName());
     SDL_Log("Using '%s' as regular font", regular->GetDebugName());
