@@ -78,6 +78,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 if(STATIC AND MINGW)
+    message(WARNING "To avoid incompleteness problems, libgcc and libstdc++ will be statically linked")
     target_link_libraries(${PROJECT_NAME} -static-libgcc -static-libstdc++)
 endif()
 
