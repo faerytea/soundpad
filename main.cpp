@@ -26,6 +26,15 @@ struct AppState {
     std::filesystem::path currentProfile;
     Pad *selectedPad = nullptr;
     Uint64 lastFrame = 0;
+    char **requestStrings = new char *[7] {
+        "NONE",
+        "ONE_SHOT",
+        "STOP",
+        "PAUSE",
+        "RESUME",
+        "LOOP",
+        "HELD",
+    };
 #ifdef FPS
     Uint64 fps = 0;
     Uint64 lastFpsReset = 0;
@@ -324,6 +333,10 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                 state->selectedPad = selectedPad;
             }
         }
+        static bool cfgAlt, cfgCtrl, cfgShift;
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+            state->selectedPad = nullptr;
+        }
         if (state->selectedPad != nullptr) {
             ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetWorkCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
             ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiCond_Always);
@@ -367,20 +380,71 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                     window,
                     nullptr,
                     0,
-                    appCfg->baseRoot.u8string().c_str(),//"/home/faerytea/.steam/debian-installation/steamui/sounds/", // tmp
+                    appCfg->baseRoot.u8string().c_str(),
                     false
                 );
             }
-            // if (ImGui::BeginTable("Transitions", 3)) {
-            //     ImGui::TableNextRow();
-            //     ImGui::TableNextColumn();
-            //     ImGui::("Ctrl", io.KeyCtrl ? ImVec4(150, 80, 200, 255) : ImVec4(80, 0, 100, 255));
-            //     ImGui::TableNextColumn();
-            //     ImGui::ColorButton("Alt", io.KeyAlt ? ImVec4(150, 80, 200, 255) : ImVec4(80, 0, 100, 255));
-            //     ImGui::TableNextColumn();
-            //     ImGui::ColorButton("Shift", io.KeyShift ? ImVec4(150, 80, 200, 255) : ImVec4(80, 0, 100, 255));
-            //     ImGui::EndTable();
-            // }
+            ImGui::Separator();
+            if (ImGui::BeginTable("Transitions", 3)) {
+                if (ImGui::IsKeyDown(ImGuiKey_ModCtrl)) cfgCtrl = true;
+                if (ImGui::IsKeyDown(ImGuiKey_ModAlt)) cfgAlt = true;
+                if (ImGui::IsKeyDown(ImGuiKey_ModShift)) cfgShift = true;
+                if (ImGui::IsKeyReleased(ImGuiKey_ModCtrl)) cfgCtrl = false;
+                if (ImGui::IsKeyReleased(ImGuiKey_ModAlt)) cfgAlt = false;
+                if (ImGui::IsKeyReleased(ImGuiKey_ModShift)) cfgShift = false;
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Checkbox("Ctrl", &cfgCtrl);
+                ImGui::TableNextColumn();
+                ImGui::Checkbox("Alt", &cfgAlt);
+                ImGui::TableNextColumn();
+                ImGui::Checkbox("Shift", &cfgShift);
+                ImGui::EndTable();
+            }
+            if (ImGui::BeginTable("States", 2, ImGuiTableFlags_SizingFixedSame)) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TableHeader("When inactive:");
+                ImGui::TableNextColumn();
+                ImGui::TableHeader("When playing:");
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::SetNextItemWidth(-FLT_MIN);
+                if (ImGui::BeginCombo("##fromSilence", state->requestStrings[state->selectedPad->table[cfgCtrl ? 1 : 0][cfgShift ? 1 : 0][cfgAlt ? 1 : 0][0]])) {
+                    for (int i = NONE; i <= HELD; ++i) {
+                        bool isSelected = (state->selectedPad->table[cfgCtrl ? 1 : 0][cfgShift ? 1 : 0][cfgAlt ? 1 : 0][0] == i);
+                        if (ImGui::Selectable(state->requestStrings[i], isSelected)) {
+                            state->selectedPad->table[cfgCtrl ? 1 : 0][cfgShift ? 1 : 0][cfgAlt ? 1 : 0][0] = static_cast<PadStateRequest>(i);
+                        }
+                        if (isSelected) {
+                            ImGui::SetItemDefaultFocus();
+                            if (appCfg->autosave) {
+                                saveSoundPad(state->currentProfile, state->selected);
+                            }
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+                ImGui::TableNextColumn();
+                ImGui::SetNextItemWidth(-FLT_MIN);
+                if (ImGui::BeginCombo("##fromPlaying", state->requestStrings[state->selectedPad->table[cfgCtrl ? 1 : 0][cfgShift ? 1 : 0][cfgAlt ? 1 : 0][1]])) {
+                    for (int i = NONE; i <= HELD; ++i) {
+                        bool isSelected = (state->selectedPad->table[cfgCtrl ? 1 : 0][cfgShift ? 1 : 0][cfgAlt ? 1 : 0][1] == i);
+                        if (ImGui::Selectable(state->requestStrings[i], isSelected)) {
+                            state->selectedPad->table[cfgCtrl ? 1 : 0][cfgShift ? 1 : 0][cfgAlt ? 1 : 0][1] = static_cast<PadStateRequest>(i);
+                        }
+                        if (isSelected) {
+                            ImGui::SetItemDefaultFocus();
+                            if (appCfg->autosave) {
+                                saveSoundPad(state->currentProfile, state->selected);
+                            }
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+                ImGui::EndTable();
+            }
+            ImGui::Separator();
             float volume = state->selectedPad->volume();
             float prevVolume = volume;
             ImGui::SliderFloat("Volume", &volume, 0.f, 2.f);
@@ -399,6 +463,10 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                 }
             }
             ImGui::End();
+        } else {
+            cfgAlt = false;
+            cfgCtrl = false;
+            cfgShift = false;
         }
     }
 
@@ -426,7 +494,7 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     //         SDL_Log("Failed to save profile %s", cp.c_str());
     //     }
     // }
-
+    delete[] state->requestStrings;
     delete state->selected;
     delete state;
     saveAppConfig(appCfg);
