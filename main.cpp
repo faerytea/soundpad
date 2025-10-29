@@ -3,6 +3,7 @@
 #include "soundpad.hpp"
 #include "Config.hpp"
 #include "Font.hpp"
+#include "Help.hpp"
 
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
@@ -35,10 +36,40 @@ struct AppState {
         "LOOP",
         "HELD",
     };
+    const Help *helpWindow = nullptr;
 #ifdef FPS
     Uint64 fps = 0;
     Uint64 lastFpsReset = 0;
 #endif
+};
+
+const char *helpContent[] = {
+                    "\tTo interact with a pad, click on it (or press its corresponding key). Ctrl, Alt and Shift modifiers can be used.",
+                    "\tTo configure a pad, click on it with right mouse button.",
+                    "\tRequest explanaition:",
+                    "\t- NONE: Do nothing.",
+                    "\t- ONE_SHOT: Play the sound once from the start (without interrupting the current playback, even from the same key).",
+                    "\t- STOP: Stop the sound playback.",
+                    "\t- PAUSE: Pause the sound playback (can be resumed).",
+                    "\t- RESUME: Resume a paused sound playback.",
+                    "\t- LOOP: Continuously play the sound in a loop until stopped.",
+                    "\t- HELD: Play the sound while the key is held down, stop when released.",
+                };
+const Help appHelp = {
+    "Help",
+    helpContent,
+    10
+};
+
+const char *aboutContent[] = {
+                    "Pretty simple soundpad on SDL3 + Dear ImGui.",
+                    "It is a free software (TODO: add license).",
+                    "Sources: https://github.com/faerytea/soundpad",
+                };
+const Help appAbout = {
+    "About Soundpad v1.2.0",
+    aboutContent,
+    3
 };
 
 /* This function runs once at startup. */
@@ -323,6 +354,15 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
             }
             ImGui::EndMenu();
         }
+        if (ImGui::BeginMenu("Help##menu")) {
+            if (ImGui::MenuItem("Help##item")) {
+                state->helpWindow = &appHelp;
+            }
+            if (ImGui::MenuItem("About")) {
+                state->helpWindow = &appAbout;
+            }
+            ImGui::EndMenu();
+        }
 #ifdef FPS
         ImGui::Text("FPS: %lu", realFPS);
 #endif
@@ -467,6 +507,20 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
             cfgAlt = false;
             cfgCtrl = false;
             cfgShift = false;
+        }
+        bool showHelp = state->helpWindow != nullptr;
+        if (showHelp) {
+            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetWorkCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+            ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiCond_Always);
+            if (ImGui::Begin(state->helpWindow->title, &showHelp, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
+                for (unsigned i = 0; i < state->helpWindow->contentLines; ++i) {
+                    ImGui::Text(state->helpWindow->content[i]);
+                }
+            }
+            ImGui::End();
+            if (!showHelp) {
+                state->helpWindow = nullptr;
+            }
         }
     }
 

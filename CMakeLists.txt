@@ -70,7 +70,7 @@ add_executable(${PROJECT_NAME}
     vendored/imgui/backends/imgui_impl_sdlrenderer3.cpp
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION 1.1.0)
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION 1.2.0)
 
 target_link_libraries(${PROJECT_NAME}
     ${SDL3_LIB}
