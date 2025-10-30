@@ -1,3 +1,21 @@
+/**
+ * Soundpad - A simple crossplatform soundpad app.
+ * Copyright © 2025 faerytea
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include "preface.hpp"
 #include <SDL3/SDL_main.h>
 #include "soundpad.hpp"
@@ -63,13 +81,23 @@ const Help appHelp = {
 
 const char *aboutContent[] = {
                     "Pretty simple soundpad on SDL3 + Dear ImGui.",
-                    "It is a free software (TODO: add license).",
-                    "Sources: https://github.com/faerytea/soundpad",
+                    "This program is free software: you can redistribute it and/or modify",
+                    "it under the terms of the GNU General Public License as published by",
+                    "the Free Software Foundation, either version 3 of the License, or",
+                    "(at your option) any later version.",
+                    "This program is distributed in the hope that it will be useful,",
+                    "but WITHOUT ANY WARRANTY; without even the implied warranty of",
+                    "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the",
+                    "GNU General Public License for more details.",
+                    "You should have received a copy of the GNU General Public License",
+                    "along with this program.  If not, see <https://www.gnu.org/licenses/>.",
+                    "Source code: https://github.com/faerytea/soundpad",
+                    "This project uses SDL3, SDL_mixer (both under zlib), and Dear ImGui (MIT License).",
                 };
 const Help appAbout = {
     "About Soundpad v1.2.0",
     aboutContent,
-    3
+    13
 };
 
 /* This function runs once at startup. */
