@@ -29,7 +29,7 @@ if(SDL3_ROOT_DIR) # CACHE PATH "Path to SDL3 installation")
         set(SDL3_MIXER_ROOT_DIR ${SDL3_ROOT_DIR} CACHE PATH "Path to SDL_mixer 3 installation")
     endif()
 else()
-    find_package(SDL3 3.3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-${SUFFIX})
+    find_package(SDL3 3.4 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-${SUFFIX})
     set(SDL3_LIB SDL3::SDL3)
     set(SDL3_HEADERS ${SDL3_LIB}/include/)
     message(STATUS "Using default SDL3_DIR: ${SDL3_DIR}")
@@ -78,7 +78,7 @@ add_executable(${PROJECT_NAME}
     vendored/imgui/backends/imgui_impl_sdlrenderer3.cpp
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION 1.2.0)
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION 1.2.1)
 
 target_link_libraries(${PROJECT_NAME}
     ${SDL3_LIB}

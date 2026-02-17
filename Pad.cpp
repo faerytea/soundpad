@@ -164,7 +164,7 @@ void Pad::resolveState() {
     for (auto t : track) {
         if (MIX_TrackPlaying(t)) {
             anyPlaying = true;
-            if (MIX_TrackLooping(t)) {
+            if (MIX_GetTrackLoops(t) == -1) {
                 anyLooped = true;
                 // SDL_Log("Track on %c is looped", letter);
             }
