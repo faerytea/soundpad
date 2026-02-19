@@ -15,15 +15,15 @@ std::string_view trim(std::string_view s) {
     return s.substr(start, end - start);
 }
 
-ImFont *getFont(std::string &path) {
+ImFont *getFont(std::string &path, bool useVectorFallback) {
     auto &io = ImGui::GetIO();
     if (path == "embedded" || path.empty()) {
-        return io.Fonts->AddFontDefault();
+        return useVectorFallback ? io.Fonts->AddFontDefaultVector() : io.Fonts->AddFontDefaultBitmap();
     }
     ImFont *font = io.Fonts->AddFontFromFileTTF(path.c_str());
     if (!font) {
         SDL_Log("Failed to load font from %s, using default", path.c_str());
-        font = io.Fonts->AddFontDefault();
+        font = useVectorFallback ? io.Fonts->AddFontDefaultVector() : io.Fonts->AddFontDefaultBitmap();
     }
     return font;
 }
@@ -92,11 +92,11 @@ AppConfig *loadAppConfig() {
     SDL_Log("Loading '%s' and '%s'", regularTTF.c_str(), monoTTF.c_str());
     auto &io = ImGui::GetIO();
     auto *regular = getFont(regularTTF);
-    auto *mono = getFont(monoTTF);
-    if (regular->GetDebugName() == "ProggyClean.ttf") {
+    auto *mono = getFont(monoTTF, false);
+    if (regular->GetDebugName() == "ProggyClean.ttf" || regular->GetDebugName() == "ProggyForever.ttf") {
         regularTTF = "embedded";
     }
-    if (mono->GetDebugName() == "ProggyClean.ttf") {
+    if (mono->GetDebugName() == "ProggyClean.ttf" || mono->GetDebugName() == "ProggyForever.ttf") {
         monoTTF = "embedded";
     }
     res->fontFiles = std::pair(regularTTF, monoTTF);

@@ -454,12 +454,12 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
             }
             ImGui::Separator();
             if (ImGui::BeginTable("Transitions", 3)) {
-                if (ImGui::IsKeyDown(ImGuiKey_ModCtrl)) cfgCtrl = true;
-                if (ImGui::IsKeyDown(ImGuiKey_ModAlt)) cfgAlt = true;
-                if (ImGui::IsKeyDown(ImGuiKey_ModShift)) cfgShift = true;
-                if (ImGui::IsKeyReleased(ImGuiKey_ModCtrl)) cfgCtrl = false;
-                if (ImGui::IsKeyReleased(ImGuiKey_ModAlt)) cfgAlt = false;
-                if (ImGui::IsKeyReleased(ImGuiKey_ModShift)) cfgShift = false;
+                if (ImGui::IsKeyDown(ImGuiMod_Ctrl)) cfgCtrl = true;
+                if (ImGui::IsKeyDown(ImGuiMod_Alt)) cfgAlt = true;
+                if (ImGui::IsKeyDown(ImGuiMod_Shift)) cfgShift = true;
+                if (ImGui::IsKeyReleased(ImGuiMod_Ctrl)) cfgCtrl = false;
+                if (ImGui::IsKeyReleased(ImGuiMod_Alt)) cfgAlt = false;
+                if (ImGui::IsKeyReleased(ImGuiMod_Shift)) cfgShift = false;
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::Checkbox("Ctrl", &cfgCtrl);
