@@ -95,7 +95,7 @@ const char *aboutContent[] = {
                     "This project uses SDL3, SDL_mixer (both under zlib), and Dear ImGui (MIT License).",
                 };
 const Help appAbout = {
-    "About Soundpad v1.2.0",
+    "About Soundpad v1.2.2",
     aboutContent,
     13
 };
@@ -565,12 +565,16 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     auto isMonoLoadedEmbedded = monoName == "ProggyClean.ttf" || monoName == "ProggyForever.ttf";
     auto isRegSetEmbedded = appCfg->fontFiles.first == "embedded" || appCfg->fontFiles.first.empty();
     auto isMonoSetEmbedded = appCfg->fontFiles.second == "embedded" || appCfg->fontFiles.second.empty();
-    auto reloadRegular = isRegLoadedEmbedded != isRegSetEmbedded || regularName != appCfg->fontFiles.first.substr(appCfg->fontFiles.first.find_last_of("/\\") + 1);
-    auto reloadMono = isMonoLoadedEmbedded != isMonoSetEmbedded || monoName != appCfg->fontFiles.second.substr(appCfg->fontFiles.second.find_last_of("/\\") + 1);
+    auto reloadRegular = (isRegLoadedEmbedded && isRegSetEmbedded) ? false : regularName != appCfg->fontFiles.first.substr(appCfg->fontFiles.first.find_last_of("/\\") + 1);
+    auto reloadMono = (isMonoLoadedEmbedded && isMonoSetEmbedded) ? false : monoName != appCfg->fontFiles.second.substr(appCfg->fontFiles.second.find_last_of("/\\") + 1);
     if (reloadRegular || reloadMono) {
         ImGui::GetIO().Fonts->Clear();
         appCfg->fontRegular = getFont(appCfg->fontFiles.first);
         appCfg->fontMono = getFont(appCfg->fontFiles.second, false);
+        SDL_Log("Reloaded fonts: regular: %s, mono: %s", regularName.data(), monoName.data());
+        // SDL_Log("Debug info: regLoadEmb %d monoLoadEmb %d", isRegLoadedEmbedded, isMonoLoadedEmbedded);
+        // SDL_Log("Debug info: regSetEmb %d monoSetEmb %d", isRegSetEmbedded, isMonoSetEmbedded);
+        // SDL_Log("Debug info: reloadRegular %d reloadMono %d", reloadRegular, reloadMono);
     }
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
