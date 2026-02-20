@@ -427,13 +427,14 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                             auto appCfg = std::get<1>(*p);
                             auto state = std::get<2>(*p);
                             auto appDir = appCfg->appdir;
-                            if (pad->loadSound(filelist[0])) {
+                            auto path = std::filesystem::u8path(filelist[0]);
+                            if (pad->loadSound(path.u8string())) {
                                 SDL_Log("Loaded sound %s on pad %c", pad->name.c_str(), pad->letter);
                                 auto base = appDir / "profiles" / state->currentProfile.stem();
                                 std::filesystem::create_directories(base);
                                 std::filesystem::copy_file(
-                                    filelist[0], 
-                                    base / (pad->name), 
+                                    path, 
+                                    base / std::filesystem::u8path(pad->name), 
                                     std::filesystem::copy_options::create_hard_links | std::filesystem::copy_options::skip_existing
                                 );
                                 if (appCfg->autosave) {

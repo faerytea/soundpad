@@ -215,7 +215,7 @@ SoundPad *loadSoundPad(std::filesystem::path &path, MIX_Mixer *mixer) {
             continue;
         }
         auto songPath = line.substr(2);
-        if (!songPath.empty() && pp->loadSound((base / songPath).u8string())) {
+        if (!songPath.empty() && pp->loadSound((base / std::filesystem::u8path(songPath)).u8string())) {
             SDL_Log("Loaded sound %s on pad %c", pp->name.c_str(), c);
         } else {
             SDL_Log("Failed to load sound %s on pad %c", songPath.c_str(), c);
