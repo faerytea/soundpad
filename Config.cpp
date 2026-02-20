@@ -71,11 +71,11 @@ AppConfig *loadAppConfig() {
                     SDL_Log("Path %s is not valid", std::string(value).c_str());
                 }
             } else if (key == "monofont") {
-                if (std::filesystem::exists(value)) {
+                if (std::filesystem::exists(value) || value == "embedded") {
                     monoTTF = value;
                 }
             } else if (key == "font") {
-                if (std::filesystem::exists(value)) {
+                if (std::filesystem::exists(value) || value == "embedded") {
                     regularTTF = value;
                 }
             } else {
