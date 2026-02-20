@@ -95,7 +95,7 @@ const char *aboutContent[] = {
                     "This project uses SDL3, SDL_mixer (both under zlib), and Dear ImGui (MIT License).",
                 };
 const Help appAbout = {
-    "About Soundpad v1.2.0",
+    "About Soundpad v1.2.2",
     aboutContent,
     13
 };
@@ -315,9 +315,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                                 auto p = static_cast<AppConfig *>(userdata);
                                 auto ttf = std::filesystem::u8path(filelist[0]);
                                 p->fontFiles.first = ttf.u8string();
-                                auto &io = ImGui::GetIO();
-                                p->fontRegular = getFont(p->fontFiles.first);
-                                io.FontDefault = p->fontRegular;
+                                // auto &io = ImGui::GetIO();
+                                // p->fontRegular = getFont(p->fontFiles.first);
+                                // io.FontDefault = p->fontRegular;
                                 saveAppConfig(p);
                             }
                         },
@@ -333,8 +333,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                 }
                 if (ImGui::MenuItem("Reset to embedded##regular", nullptr, false, regularPath != "embedded")) {
                     appCfg->fontFiles.first = "embedded";
-                    auto &io = ImGui::GetIO();
-                    appCfg->fontRegular = getFont(appCfg->fontFiles.first);
+                    // auto &io = ImGui::GetIO();
+                    // appCfg->fontRegular = getFont(appCfg->fontFiles.first);
                     saveAppConfig(appCfg);
                 }
                 ImGui::Separator();
@@ -348,8 +348,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                                 auto p = static_cast<AppConfig *>(userdata);
                                 auto ttf = std::filesystem::u8path(filelist[0]);
                                 p->fontFiles.second = ttf.u8string();
-                                auto &io = ImGui::GetIO();
-                                p->fontMono = getFont(p->fontFiles.second);
+                                // auto &io = ImGui::GetIO();
+                                // p->fontMono = getFont(p->fontFiles.second);
                                 saveAppConfig(p);
                             }
                         },
@@ -365,17 +365,17 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                 }
                 if (ImGui::MenuItem("Reset to embedded##mono", nullptr, false, monoPath != "embedded")) {
                     appCfg->fontFiles.second = "embedded";
-                    auto &io = ImGui::GetIO();
-                    appCfg->fontMono = getFont(appCfg->fontFiles.second);
+                    // auto &io = ImGui::GetIO();
+                    // appCfg->fontMono = getFont(appCfg->fontFiles.second);
                     saveAppConfig(appCfg);
                 }
                 ImGui::Separator();
                 if (ImGui::MenuItem("Reset to system's default")) {
                     appCfg->fontFiles = getDefaultFontFiles();
-                    auto &io = ImGui::GetIO();
-                    appCfg->fontRegular = getFont(appCfg->fontFiles.first);
-                    io.FontDefault = appCfg->fontRegular;
-                    appCfg->fontMono = getFont(appCfg->fontFiles.second);
+                    // auto &io = ImGui::GetIO();
+                    // appCfg->fontRegular = getFont(appCfg->fontFiles.first);
+                    // io.FontDefault = appCfg->fontRegular;
+                    // appCfg->fontMono = getFont(appCfg->fontFiles.second);
                     saveAppConfig(appCfg);
                 }
                 ImGui::EndMenu();
@@ -455,12 +455,12 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
             }
             ImGui::Separator();
             if (ImGui::BeginTable("Transitions", 3)) {
-                if (ImGui::IsKeyDown(ImGuiKey_ModCtrl)) cfgCtrl = true;
-                if (ImGui::IsKeyDown(ImGuiKey_ModAlt)) cfgAlt = true;
-                if (ImGui::IsKeyDown(ImGuiKey_ModShift)) cfgShift = true;
-                if (ImGui::IsKeyReleased(ImGuiKey_ModCtrl)) cfgCtrl = false;
-                if (ImGui::IsKeyReleased(ImGuiKey_ModAlt)) cfgAlt = false;
-                if (ImGui::IsKeyReleased(ImGuiKey_ModShift)) cfgShift = false;
+                if (ImGui::IsKeyDown(ImGuiMod_Ctrl)) cfgCtrl = true;
+                if (ImGui::IsKeyDown(ImGuiMod_Alt)) cfgAlt = true;
+                if (ImGui::IsKeyDown(ImGuiMod_Shift)) cfgShift = true;
+                if (ImGui::IsKeyReleased(ImGuiMod_Ctrl)) cfgCtrl = false;
+                if (ImGui::IsKeyReleased(ImGuiMod_Alt)) cfgAlt = false;
+                if (ImGui::IsKeyReleased(ImGuiMod_Shift)) cfgShift = false;
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::Checkbox("Ctrl", &cfgCtrl);
@@ -559,6 +559,25 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     SDL_RenderClear(renderer);
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
     SDL_RenderPresent(renderer);
+
+    auto regularName = std::string_view(appCfg->fontRegular->GetDebugName());
+    auto monoName = std::string_view(appCfg->fontMono->GetDebugName());
+    auto isRegLoadedEmbedded = regularName == "ProggyClean.ttf" || regularName == "ProggyForever.ttf";
+    auto isMonoLoadedEmbedded = monoName == "ProggyClean.ttf" || monoName == "ProggyForever.ttf";
+    auto isRegSetEmbedded = appCfg->fontFiles.first == "embedded" || appCfg->fontFiles.first.empty();
+    auto isMonoSetEmbedded = appCfg->fontFiles.second == "embedded" || appCfg->fontFiles.second.empty();
+    auto reloadRegular = (isRegLoadedEmbedded && isRegSetEmbedded) ? false : regularName != appCfg->fontFiles.first.substr(appCfg->fontFiles.first.find_last_of("/\\") + 1);
+    auto reloadMono = (isMonoLoadedEmbedded && isMonoSetEmbedded) ? false : monoName != appCfg->fontFiles.second.substr(appCfg->fontFiles.second.find_last_of("/\\") + 1);
+    if (reloadRegular || reloadMono) {
+        ImGui::GetIO().Fonts->Clear();
+        appCfg->fontRegular = getFont(appCfg->fontFiles.first);
+        appCfg->fontMono = getFont(appCfg->fontFiles.second, false);
+        SDL_Log("Reloaded fonts: regular: %s, mono: %s", regularName.data(), monoName.data());
+        // SDL_Log("Debug info: regLoadEmb %d monoLoadEmb %d", isRegLoadedEmbedded, isMonoLoadedEmbedded);
+        // SDL_Log("Debug info: regSetEmb %d monoSetEmb %d", isRegSetEmbedded, isMonoSetEmbedded);
+        // SDL_Log("Debug info: reloadRegular %d reloadMono %d", reloadRegular, reloadMono);
+    }
+
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 

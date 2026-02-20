@@ -16,9 +16,8 @@ Can play a sound, pause/resume, loop, stop and play-while-pressed.
 
 ## Building
 
-You'll need [SDL 3.3+](https://github.com/libsdl-org/SDL) and [SDL_mixer 3+](https://github.com/libsdl-org/SDL_mixer)
-build as static or shared libs. Since SDL_mixer 3 is not released yet _and_ requires SDL 3.3+
-(which is not a stable release), you probably need to build them.
+You'll need [SDL 3.4](https://github.com/libsdl-org/SDL) and [SDL_mixer 3+](https://github.com/libsdl-org/SDL_mixer)
+build as static or shared libs. Since SDL_mixer 3 is not released yet, you probably need to build it.
 Building SDL3 isn't hard, almost same process can be applied to SDL_mixer 3.
 
 Dear ImGui provided as a submodule, since it is preffered way to include it,
