@@ -95,7 +95,7 @@ const char *aboutContent[] = {
                     "This project uses SDL3, SDL_mixer (both under zlib), and Dear ImGui (MIT License).",
                 };
 const Help appAbout = {
-    "About Soundpad v1.2.2",
+    "About Soundpad v1.2.3",
     aboutContent,
     13
 };
