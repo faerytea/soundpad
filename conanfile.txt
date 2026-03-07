@@ -1,0 +1,10 @@
+[requires]
+sdl/3.4.0
+sdl_mixer/3.1.2
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout

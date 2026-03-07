@@ -1,67 +1,32 @@
-cmake_minimum_required(VERSION 3.21)
-project(soundpad LANGUAGES C CXX)
-
-if(NOT DEFINED STATIC) 
-    set(STATIC OFF CACHE BOOL "Link SDL statically (default OFF)")
-endif()
-
-if(STATIC)
-    set(SUFFIX "static")
-    set(LIBRARY_SUFFIX "${CMAKE_STATIC_LIBRARY_SUFFIX}")
+cmake_minimum_required(VERSION 3.12)
+if(CMAKE_VERSION VERSION_LESS 4.3)
+    project(soundpad 
+        LANGUAGES C CXX
+        VERSION 1.2.4
+        HOMEPAGE_URL "https://github.com/faerytea/soundpad"
+    )
 else()
-    set(SUFFIX "shared")
-    set(LIBRARY_SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
-endif()
-
-if(MSVC)
-	set(FN SDL3-${SUFFIX})
-	set(FNM SDL3_mixer-${SUFFIX})
-else()
-	set(FN libSDL3)
-	set(FNM libSDL3_mixer)
-endif()
-
-if(SDL3_ROOT_DIR) # CACHE PATH "Path to SDL3 installation")
-    message(STATUS "Using SDL3_ROOT_DIR: ${SDL3_ROOT_DIR}")
-    set(SDL3_LIB ${SDL3_ROOT_DIR}/lib/${FN}${LIBRARY_SUFFIX})
-    set(SDL3_HEADERS ${SDL3_ROOT_DIR}/include/)
-    if(NOT DEFINED SDL3_MIXER_ROOT_DIR)
-        set(SDL3_MIXER_ROOT_DIR ${SDL3_ROOT_DIR} CACHE PATH "Path to SDL_mixer 3 installation")
-    endif()
-else()
-    find_package(SDL3 3.4 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-${SUFFIX})
-    set(SDL3_LIB SDL3::SDL3)
-    set(SDL3_HEADERS ${SDL3_LIB}/include/)
-    message(STATUS "Using default SDL3_DIR: ${SDL3_DIR}")
-endif()
-
-if(SDL3_MIXER_ROOT_DIR)
-    message(STATUS "Using SDL3_MIXER_ROOT_DIR: ${SDL3_MIXER_ROOT_DIR}")
-    set(SDL3_MIXER_LIB ${SDL3_MIXER_ROOT_DIR}/lib/${FNM}${LIBRARY_SUFFIX})
-    set(SDL3_MIXER_HEADERS ${SDL3_MIXER_ROOT_DIR}/include/)
-else()
-    find_package(SDL3_mixer 3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3_mixer-${SUFFIX})
-    set(SDL3_MIXER_LIB SDL3_mixer::SDL3_mixer)
-    set(SDL3_MIXER_HEADERS ${SDL3_MIXER_LIB}/include/)
-    message(STATUS "Using default SDL3_MIXER_DIR: ${SDL3_MIXER_DIR}")
+    project(soundpad 
+        LANGUAGES C CXX
+        VERSION 1.2.4
+        HOMEPAGE_URL "https://github.com/faerytea/soundpad/"
+        SPDX_LICENSE "GPL-3.0-or-later"
+    )
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Static link: ${STATIC}")
+find_package(SDL3 3.4.0 REQUIRED)
+#find_package(SDL3_image 3 REQUIRED)
+find_package(SDL3_mixer 3.1.2 REQUIRED)
 
 include_directories(
-    ${SDL3_HEADERS}
-    ${SDL3_MIXER_HEADERS}
     vendored/imgui/
     vendored/imgui/backends/
 )
-
-# ============================================================
-# СБОРКА ПРОЕКТА
-# ============================================================
 
 add_executable(${PROJECT_NAME} 
     main.cpp 
@@ -78,29 +43,44 @@ add_executable(${PROJECT_NAME}
     vendored/imgui/backends/imgui_impl_sdlrenderer3.cpp
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION 1.2.3)
+if(MSVC)
+    set(WIN32_EXECUTABLE ON)
+endif()
+
+if(UNIX AND NOT APPLE)
+    find_package(Fontconfig)
+    if(Fontconfig_FOUND)
+        target_link_libraries(${PROJECT_NAME} Fontconfig::Fontconfig)
+    endif()
+endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 
 target_link_libraries(${PROJECT_NAME}
-    ${SDL3_LIB}
-    ${SDL3_MIXER_LIB}
+    SDL3::SDL3
+    SDL3_mixer::SDL3_mixer
+    #SDL3::SDL3_image
 )
 
-if(STATIC AND MINGW)
-    message(WARNING "To avoid incompleteness problems, libgcc and libstdc++ will be statically linked")
-    target_link_libraries(${PROJECT_NAME} -static-libgcc -static-libstdc++)
+# install target
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+if(WIN32)
+    install(FILES $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}> DESTINATION bin)
 endif()
 
-if(UNIX)
-    target_link_libraries(${PROJECT_NAME} pthread dl fontconfig)
-elseif(WIN32)
-    target_link_libraries(${PROJECT_NAME} winmm imm32 version setupapi)
-endif()
+# пакет
+set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_VENDOR "faerytea")
+set(CPACK_PACKAGE_CONTACT "t.me/faerytea")
+set(CPACK_PACKAGE_DESCRIPTION "Soundpad is a simple soundboard application built with SDL3 and ImGui.")
 
-# ============================================================
-# ОТЛАДОЧНЫЕ СООБЩЕНИЯ
-# ============================================================
-message(STATUS "Platform: ${CMAKE_SYSTEM_NAME}")
-message(STATUS "SDL3 include: ${SDL3_HEADERS}")
-message(STATUS "SDL3_mixer include: ${SDL3_MIXER_HEADERS}")
-message(STATUS "SDL3 lib: ${SDL3_LIB}")
-message(STATUS "SDL3_mixer lib: ${SDL3_MIXER_LIB}")
+set(CPACK_CREATE_DESKTOP_LINKS ${PROJECT_NAME})
+
+set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/COPYING)
+install(FILES COPYING DESTINATION share/doc/${PROJECT_NAME})
+
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl3-0 (>= 3.4.0), libsdl3-mixer0 (>= 3.1.2), fontconfig")
+set(CPACK_DEBIAN_PACKAGE_SECTION sound)
+
+include(CPack)
