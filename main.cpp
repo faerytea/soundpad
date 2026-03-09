@@ -39,6 +39,9 @@ const char *defaultFontDir =
                             "/usr/share/fonts/truetype/"
 #endif
 ;
+#ifndef SOUNDPAD_VERSION
+#define SOUNDPAD_VERSION "dev"
+#endif
 
 struct AppState {
     SoundPad *selected = nullptr;
@@ -95,14 +98,14 @@ const char *aboutContent[] = {
                     "This project uses SDL3, SDL_mixer (both under zlib), and Dear ImGui (MIT License).",
                 };
 const Help appAbout = {
-    "About Soundpad v1.2.3",
+    "About Soundpad " SOUNDPAD_VERSION,
     aboutContent,
     13
 };
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
-    SDL_SetAppMetadata("ft's soundpad", "1.0", "name.faerytea.soundpad");
+    SDL_SetAppMetadata("ft's soundpad", SOUNDPAD_VERSION, "name.faerytea.soundpad");
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());

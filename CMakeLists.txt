@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 find_package(SDL3 3.4.0 REQUIRED)
-#find_package(SDL3_image 3 REQUIRED)
+find_package(SDL3_image 3.4.0 REQUIRED)
 find_package(SDL3_mixer 3.1.2 REQUIRED)
 
 include_directories(
@@ -55,11 +55,12 @@ if(UNIX AND NOT APPLE)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+target_compile_definitions(${PROJECT_NAME} PRIVATE "SOUNDPAD_VERSION=\"${PROJECT_VERSION}\"")
 
 target_link_libraries(${PROJECT_NAME}
     SDL3::SDL3
     SDL3_mixer::SDL3_mixer
-    #SDL3::SDL3_image
+    SDL3_image::SDL3_image
 )
 
 # install target
