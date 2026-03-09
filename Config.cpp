@@ -260,6 +260,14 @@ SoundPad *loadSoundPad(std::filesystem::path &path, MIX_Mixer *mixer) {
         vars >> volume;
         pp->volume(volume);
         SDL_Log("Volume of %c is %.3f", pp->letter, volume);
+        // loading picture
+        if (!std::getline(cfg, line) || line.empty()) continue;
+        if (line.substr(0, 4) == "pic " && line.size() > 4) {
+            pp->loadPicture((base / std::filesystem::u8path(line.substr(4))).u8string());
+            if (std::getline(cfg, line) && !line.empty()) {
+                pp->pictureOpacity = std::stoi(line);
+            }
+        }
     }
 
     return pad;
@@ -318,7 +326,14 @@ bool saveSoundPad(std::filesystem::path &path, SoundPad *pad) {
             }
             cfg << std::endl 
                 << p.volume()
-                << std::endl << std::endl;
+                << std::endl
+                << "pic "
+                << p.picturePath;
+            if (!p.picturePath.empty()) cfg 
+                << std::endl
+                << p.pictureOpacity;
+            cfg << std::endl
+                << std::endl;
         }
     }
 

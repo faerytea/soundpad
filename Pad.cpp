@@ -2,6 +2,62 @@
 
 SDLLoopProp Pad::loop = SDLLoopProp();
 
+void Pad::unloadPicture() {
+    if (picture) {
+        SDL_DestroyTexture(picture);
+        picture = nullptr;
+        picturePath = "";
+    }
+}
+
+bool Pad::loadPicture(const std::string &path) {
+    unloadPicture();
+    picture = IMG_LoadTexture(renderer, path.c_str());
+    if (!picture) {
+        SDL_Log("Failed to load picture on %c: %s", letter, SDL_GetError());
+        return false;
+    }
+
+    // Set blend mode to enable alpha blending
+    if (!SDL_SetTextureBlendMode(picture, SDL_BLENDMODE_BLEND)) {
+        SDL_Log("Failed to set texture transparency on %c: %s", letter, SDL_GetError());
+        SDL_DestroyTexture(picture);
+        picture = nullptr;
+
+        // slow reload via surface
+        SDL_Surface *surface = IMG_Load(path.c_str());
+        if (!surface) {
+            SDL_Log("Failed to load picture surface on %c: %s", letter, SDL_GetError());
+            return false;
+        }
+        SDL_Surface *converted = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA8888);
+        if (!converted) {
+            SDL_Log("Failed to convert surface on %c: %s", letter, SDL_GetError());
+        }
+        SDL_DestroySurface(surface);
+        if (!converted) {
+            return false;
+        }
+        picture = SDL_CreateTextureFromSurface(renderer, converted);
+        if (!picture) {
+            SDL_Log("Failed to create texture from surface on %c: %s", letter, SDL_GetError());
+        }
+        SDL_DestroySurface(converted);
+        if (!picture) {
+            return false;
+        }
+        if (!SDL_SetTextureBlendMode(picture, SDL_BLENDMODE_BLEND)) {
+            SDL_Log("Failed to set texture transparency again on %c: %s", letter, SDL_GetError());
+            SDL_DestroyTexture(picture);
+            picture = nullptr;
+            return false;
+        }
+    }
+    auto lastSlash = path.find_last_of("/\\");
+    picturePath = path.substr(lastSlash == std::string::npos ? 0 : lastSlash + 1);
+    return true;
+}
+
 bool Pad::loadSound(const std::string &path) {
     unloadSound();
     audio = MIX_LoadAudio(mixer, path.c_str(), true);
@@ -63,6 +119,9 @@ Pad::~Pad() {
     unloadSound();
     for (auto t : track) {
         MIX_DestroyTrack(t);
+    }
+    if (picture) {
+        SDL_DestroyTexture(picture);
     }
     // SDL_Log("Pad %c destroyed", letter);
 }
@@ -254,10 +313,30 @@ bool Pad::render(ImVec2 &size, bool interactive, ImFont *letterFont, float fontS
     letterFont->RenderChar(draw, fontSize, letterTL, IM_COL32(200, 200, 200, 255), letter);
     // draw->AddText(letterTL, IM_COL32(80, 80, 80, 255), &letter, &letter + 1);
     ImGui::PopFont();
-    auto nameSize = ImGui::CalcTextSize(name.c_str(), 0, false, size.x);
-    auto namePos = ImVec2(pos.x + (size.x - nameSize.x) / 2, pos.y + (size.y - nameSize.y) / 2);
-    draw->AddRectFilled(namePos, ImVec2(namePos.x + nameSize.x, namePos.y + nameSize.y), IM_COL32(128, 128, 128, 128));
-    draw->AddText(nullptr, 0, namePos, IM_COL32(255, 255, 255, 255), name.c_str(), nullptr, size.x);
+    if (picture) {
+        ImVec2 picPos, picMax;
+        if (picture->w == picture->h) {
+            picPos = pos;
+            picMax = pMax;
+        } else {
+            auto aspect = (double) picture->w / (double) picture->h;
+            if (aspect > 1) {
+                // wider than taller, fit to width
+                picPos = ImVec2(pos.x, pos.y + (size.y - size.x / aspect) / 2);
+                picMax = ImVec2(pos.x + size.x, picPos.y + size.x / aspect);
+            } else {
+                // taller than wider, fit to height
+                picPos = ImVec2(pos.x + (size.x - size.y * aspect) / 2, pos.y);
+                picMax = ImVec2(picPos.x + size.y * aspect, pos.y + size.y);
+            }
+        }
+        draw->AddImage(picture, picPos, picMax, ImVec2(0, 0), ImVec2(1, 1), IM_COL32(255, 255, 255, pictureOpacity));
+    } else {
+        auto nameSize = ImGui::CalcTextSize(name.c_str(), 0, false, size.x);
+        auto namePos = ImVec2(pos.x + (size.x - nameSize.x) / 2, pos.y + (size.y - nameSize.y) / 2);
+        draw->AddRectFilled(namePos, ImVec2(namePos.x + nameSize.x, namePos.y + nameSize.y), IM_COL32(128, 128, 128, 128));
+        draw->AddText(nullptr, 0, namePos, IM_COL32(255, 255, 255, 255), name.c_str(), nullptr, size.x);
+    }
 
     bool res = interactive ? processInput() : false;
     fulfillRequest();

@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 3.12)
 if(CMAKE_VERSION VERSION_LESS 4.3)
     project(soundpad 
         LANGUAGES C CXX
-        VERSION 1.2.4
+        VERSION 1.2.5
         HOMEPAGE_URL "https://github.com/faerytea/soundpad"
     )
 else()
     project(soundpad 
         LANGUAGES C CXX
-        VERSION 1.2.4
+        VERSION 1.2.5
         HOMEPAGE_URL "https://github.com/faerytea/soundpad/"
         SPDX_LICENSE "GPL-3.0-or-later"
     )
@@ -81,7 +81,7 @@ set(CPACK_CREATE_DESKTOP_LINKS ${PROJECT_NAME})
 set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/COPYING)
 install(FILES COPYING DESTINATION share/doc/${PROJECT_NAME})
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl3-0 (>= 3.4.0), libsdl3-mixer0 (>= 3.1.2), fontconfig")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl3-0 (>= 3.4.0), libsdl3-mixer0 (>= 3.1.2), libsdl3-image0 (>= 3.4.0), fontconfig")
 set(CPACK_DEBIAN_PACKAGE_SECTION sound)
 
 include(CPack)

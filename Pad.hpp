@@ -49,17 +49,17 @@ public:
         {   // NO ctrl
             {   // NO shift
                 {ONE_SHOT, ONE_SHOT}, // NO alt
-                {HELD, NONE}      // alt
+                {HELD, NONE}          // alt
             },
             {   // shift
                 {LOOP, STOP}, // NO alt
-                {NONE, NONE}      // alt
+                {NONE, NONE}  // alt
             }
         },
         {   // ctrl
             {   // NO shift
                 {RESUME, PAUSE}, // NO alt
-                {NONE, NONE}   // alt
+                {NONE, NONE}     // alt
             },
             {   // shift
                 {NONE, NONE}, // NO alt
@@ -73,6 +73,10 @@ public:
 
     MIX_Audio *audio = nullptr;
     std::string name = "";
+
+    int pictureOpacity = 192;
+    SDL_Texture *picture = nullptr;
+    std::string picturePath = "";
 
     Pad(const char letter, MIX_Mixer *mixer)
         : letter(letter)
@@ -103,6 +107,8 @@ public:
         // SDL_Log("Pad %c moved", letter);
     }
 
+    bool loadPicture(const std::string &path);
+
     bool loadSound(const std::string &path);
 
     bool render(ImVec2 &size, bool interactive, ImFont *letterFont, float fontSize);
@@ -112,6 +118,8 @@ public:
     void fulfillRequest();
 
     void resolveState();
+
+    void unloadPicture();
 
     void unloadSound();
 

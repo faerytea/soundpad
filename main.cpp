@@ -25,7 +25,6 @@
 
 /* We will use this renderer to draw into this window every frame. */
 static SDL_Window *window = NULL;
-static SDL_Renderer *renderer = NULL;
 static MIX_Mixer *mixer = NULL;
 static AppConfig *appCfg = nullptr;
 
@@ -455,6 +454,89 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                     appCfg->baseRoot.u8string().c_str(),
                     false
                 );
+            }
+            if (!sName.empty()) {
+                static bool renameWindowOpen = false;
+                static char newName[256];
+                if (ImGui::Button("Rename", ImVec2(-1, 0))) {
+                    renameWindowOpen = true;
+                    strncpy(newName, sName.c_str(), sizeof(newName) - 1);
+                    newName[sizeof(newName) - 1] = 0;
+                }
+                if (renameWindowOpen) {
+                    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetWorkCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+                    ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiCond_Always);
+                    if (ImGui::Begin("Rename Pad", &renameWindowOpen, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
+                        ImGui::InputText("New name", newName, sizeof(newName));
+                        if (ImGui::Button("Confirm", ImVec2(-1, 0))) {
+                            std::string oldName = sName;
+                            sName = newName;
+                            auto appDir = appCfg->appdir;
+                            auto base = appDir / "profiles" / state->currentProfile.stem();
+                            std::filesystem::rename(
+                                base / std::filesystem::u8path(oldName), 
+                                base / std::filesystem::u8path(sName)
+                            );
+                            if (appCfg->autosave) {
+                                saveSoundPad(state->currentProfile, state->selected);
+                            }
+                            renameWindowOpen = false;
+                        }
+                    }
+                    ImGui::End();
+                }
+                auto picture = state->selectedPad->picturePath;
+                if (!picture.empty()) {
+                    if (ImGui::Button("X##Clear picture", ImVec2(0, 0))) {
+                        state->selectedPad->unloadPicture();
+                        if (appCfg->autosave) {
+                            saveSoundPad(state->currentProfile, state->selected);
+                        }
+                    }
+                    ImGui::SameLine();
+                }
+                if (ImGui::Button(picture.empty() ? "Set picture" : picture.c_str(), ImVec2(-1, 0))) {
+                    SDL_ShowOpenFileDialog(
+                        [](void *userdata, const char * const *filelist, int filter) {
+                            if (filelist && filelist[0]) {
+                                auto p = static_cast<std::tuple<Pad *, AppConfig *, AppState *> *>(userdata);
+                                auto pad = std::get<0>(*p);
+                                auto appCfg = std::get<1>(*p);
+                                auto state = std::get<2>(*p);
+                                auto appDir = appCfg->appdir;
+                                auto path = std::filesystem::u8path(filelist[0]);
+                                if (pad->loadPicture(path.u8string())) {
+                                    SDL_Log("Loaded picture %s on pad %c", pad->picturePath.c_str(), pad->letter);
+                                    auto base = appDir / "profiles" / state->currentProfile.stem();
+                                    std::filesystem::create_directories(base);
+                                    std::filesystem::copy_file(
+                                        path, 
+                                        base / std::filesystem::u8path(pad->picturePath), 
+                                        std::filesystem::copy_options::create_hard_links | std::filesystem::copy_options::skip_existing
+                                    );
+                                    if (appCfg->autosave) {
+                                        saveSoundPad(state->currentProfile, state->selected);
+                                    }
+                                } else {
+                                    SDL_Log("Failed to load picture on pad %c", pad->letter);
+                                }
+                            }
+                        },
+                        new std::tuple<Pad *, AppConfig *, AppState *>(state->selectedPad, appCfg, state), // will be deleted by the dialog
+                        window,
+                        nullptr,
+                        0,
+                        appCfg->baseRoot.u8string().c_str(),
+                        false
+                    );
+                }
+                if (!picture.empty()) {
+                    if (ImGui::SliderInt("Picture opacity", &state->selectedPad->pictureOpacity, 0, 255)) {
+                        if (appCfg->autosave) {
+                            saveSoundPad(state->currentProfile, state->selected);
+                        }
+                    }
+                }
             }
             ImGui::Separator();
             if (ImGui::BeginTable("Transitions", 3)) {
