@@ -6,6 +6,15 @@
 Pad *ShowSoundPad(SoundPad &pads, bool interactive, ImFont *letterFont) {
     static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
 
+    // Stop everything on spacebar
+    if (ImGui::IsKeyPressed(ImGuiKey_Space)) {
+        for (auto &row : pads) {
+            for (auto &pad : row) {
+                pad.request = PadStateRequest::STOP;
+            }
+        }
+    }
+
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);

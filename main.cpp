@@ -23,9 +23,6 @@
 #include "Font.hpp"
 #include "Help.hpp"
 
-/* We will use this renderer to draw into this window every frame. */
-static SDL_Window *window = NULL;
-static MIX_Mixer *mixer = NULL;
 static AppConfig *appCfg = nullptr;
 
 const SDL_DialogFileFilter ttfFileFilter = { "TrueType Font", "ttf" };
@@ -74,11 +71,12 @@ const char *helpContent[] = {
                     "\t- RESUME: Resume a paused sound playback.",
                     "\t- LOOP: Continuously play the sound in a loop until stopped.",
                     "\t- HELD: Play the sound while the key is held down, stop when released.",
+                    "\tTo stop all sounds immediately, press spacebar.",
                 };
 const Help appHelp = {
     "Help",
     helpContent,
-    10
+    sizeof(helpContent) / sizeof(helpContent[0])
 };
 
 const char *aboutContent[] = {
@@ -99,11 +97,26 @@ const char *aboutContent[] = {
 const Help appAbout = {
     "About Soundpad " SOUNDPAD_VERSION,
     aboutContent,
-    13
+    sizeof(aboutContent) / sizeof(aboutContent[0])
 };
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+    if (argc > 1) {
+        if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0) {
+            printf("Usage: %s [OPTIONS]\n", argv[0]);
+            printf("Options:\n");
+            printf("\t--help, -h         \tShow this help message and exit\n");
+            printf("\t--version, -v      \tShow version information and exit\n");
+            printf("\t--profile <PROFILE>\tLoad the specified profile on startup\n");
+            return SDL_APP_SUCCESS;
+        }
+        if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
+            printf("Soundpad version " SOUNDPAD_VERSION "\n");
+            return SDL_APP_SUCCESS;
+        }
+    }
+
     SDL_SetAppMetadata("ft's soundpad", SOUNDPAD_VERSION, "name.faerytea.soundpad");
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
@@ -166,9 +179,25 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
         return SDL_APP_FAILURE;
     }
 
-    *appstate = new AppState();
+    auto state = new AppState();
 
     SDL_Log("Appdir: %s", appCfg->appdir.u8string().c_str());
+
+    if (argc > 2 && strcmp(argv[1], "--profile") == 0) {
+        const std::string_view profile = argv[2];
+        for (const auto &p : appCfg->profiles) {
+            if (p.filename().u8string() == profile) {
+                SoundPad *newPad = loadSoundPad(p, mixer);
+                state->selected = newPad;
+                state->currentProfile = p;
+            }
+        }
+        if (state->selected == nullptr) {
+            SDL_Log("Profile %s not found, loading selector", profile.data());
+        }
+    }
+
+    *appstate = state;
 
     // SDL_SetRenderLogicalPresentation(renderer, 1280 * main_scale, 800 * main_scale, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
@@ -668,6 +697,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
 /* This function runs once at shutdown. */
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+    if (!SDL_WasInit(0)) {
+        return;
+    }
     /* SDL will clean up the window/renderer for us. */
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();

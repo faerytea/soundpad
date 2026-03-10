@@ -11,6 +11,9 @@
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
 
+/* We will use this renderer to draw into this window every frame. */
 inline SDL_Renderer *renderer = nullptr;
+inline SDL_Window *window = nullptr;
+inline MIX_Mixer *mixer = nullptr;
 
 #endif // PREFACE_HPP

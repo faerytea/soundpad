@@ -22,9 +22,9 @@ struct AppConfig {
 
 SoundPad *createDefault(MIX_Mixer *mixer);
 
-SoundPad *loadSoundPad(std::filesystem::path &path, MIX_Mixer *mixer);
+SoundPad *loadSoundPad(const std::filesystem::path &path, MIX_Mixer *mixer);
 
-bool saveSoundPad(std::filesystem::path &path, SoundPad *pad);
+bool saveSoundPad(const std::filesystem::path &path, SoundPad *pad);
 
 ImFont *getFont(std::string &path, bool useVectorFallback = true);
 

@@ -157,7 +157,7 @@ SoundPad *createDefault(MIX_Mixer *mixer) {
 
 const int ctrl = 1, shift = 2, alt = 4, playing = 8;
 
-SoundPad *loadSoundPad(std::filesystem::path &path, MIX_Mixer *mixer) {
+SoundPad *loadSoundPad(const std::filesystem::path &path, MIX_Mixer *mixer) {
     SDL_Log("Loading soundpad config from %s", path.u8string().c_str());
     std::ifstream cfg(path);
     if (!cfg.is_open()) {
@@ -273,7 +273,7 @@ SoundPad *loadSoundPad(std::filesystem::path &path, MIX_Mixer *mixer) {
     return pad;
 }
 
-bool saveSoundPad(std::filesystem::path &path, SoundPad *pad) {
+bool saveSoundPad(const std::filesystem::path &path, SoundPad *pad) {
     std::ofstream cfg(path);
     if (!cfg.is_open()) {
         SDL_Log("Failed to open pad config %s for writing", path.u8string().c_str());
