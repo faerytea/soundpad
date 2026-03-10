@@ -25,6 +25,59 @@
 
 static AppConfig *appCfg = nullptr;
 
+const SDL_DialogFileFilter imgFileFilter[] = {
+    {"Any image", "bmp;gif;jpg;jpeg;lbm;iff;pic;pcx;png;pbm;pgm;ppm;qoi;tga;tpic;xcf;xpm;svg;avif;jxl;tif;tiff;webp"},
+    {"Bitmap image", "bmp"},
+    {"GIF", "gif"},
+    {"JPEG", "jpg;jpeg"},
+    {"Interleaved Bitmap", "lbm;iff;pic"},
+    {"PCExchange", "pcx"},
+    {"Portable Network Graphics", "png"},
+    {"Portable Anymap", "pbm;pgm;ppm"},
+    {"Quite OK Image", "qoi"},
+    {"Truevision", "tga;tpic"},
+    {"GIMP", "xcf"},
+    {"X Pixmap", "xpm"},
+    {"Scalable vector graphics", "svg"},
+    {"AV1 Image", "avif"},
+    {"JPEG-XL Image", "jxl"},
+    {"Tagged Image File", "tif;tiff"},
+    {"WebP", "webp"},
+    {"All files", "*"},
+};
+const SDL_DialogFileFilter musicFileFilter[] = {
+    {"Any audio", 
+        "aiff;aif;aifc" // aiff
+        ";wav"          // wave
+        ";voc"          // SoundBlaster
+        ";au;snd"       // Sun audio
+        ";flac"         // FLAC
+        ";mpeg;mp3"     // MPEG, MP3
+        ";mid;midi;kar;smf;xmidi;rmi;xmf" // MIDI
+        ";rcp;r36;g18;g36;mfi" // Recomposer
+        ";sf2;sf3"      // Soundfont
+        ";wv"           // WavPack
+        ";ogg"          // OGG
+        ";abk;amf;psm;ps16;j2b;mfp;smp;mmdc;stim;umx;xmf;ay;gbs;gym;hes;kss;nsf;nsfe;sap;spc;vgm;vgz;aym" // Game formats
+        ";mod;m15;nt;flx;wow;dmf;dbm;digi;emod;mtn;okt;sfx;dtm;mgt;669;far;fnk;imf;it;mdl;liq;mtm;ptm;rtm;stm;s3m;ult;xm;amf;gdm;stx" // Obscure
+    },
+    {"AIFF", "aiff;aif;aifc"},
+    {"Wave", "wav"},
+    {"SoundBlaster", "voc"},
+    {"Sun audio", "au;snd"},
+    {"FLAC", "flac"},
+    {"MPEG", "mpeg"},
+    {"MP3", "mp3"},
+    {"MIDI", "mid;midi;kar;smf;xmidi;rmi;xmf"},
+    {"Recomposer", "rcp;r36;g18;g36;mfi"},
+    {"Soundfont", "sf2;sf3"},
+    {"WavPack", "wv"},
+    {"OGG", "ogg"},
+    {"Game formats", "abk;amf;psm;ps16;j2b;mfp;smp;mmdc;stim;umx;xmf;ay;gbs;gym;hes;kss;nsf;nsfe;sap;spc;vgm;vgz;aym"},
+    {"Obscure", "mod;m15;nt;flx;wow;dmf;dbm;digi;emod;mtn;okt;sfx;dtm;mgt;669;far;fnk;imf;it;mdl;liq;mtm;ptm;rtm;stm;s3m;ult;xm;amf;gdm;stx"},
+    {"All files", "*"},
+};
+
 const SDL_DialogFileFilter ttfFileFilter = { "TrueType Font", "ttf" };
 const char *defaultFontDir =
 #ifdef _WIN32
@@ -478,8 +531,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                     },
                     new std::tuple<Pad *, AppConfig *, AppState *>(state->selectedPad, appCfg, state), // will be deleted by the dialog
                     window,
-                    nullptr,
-                    0,
+                    musicFileFilter,
+                    sizeof(musicFileFilter) / sizeof(musicFileFilter[0]),
                     appCfg->baseRoot.u8string().c_str(),
                     false
                 );
@@ -553,8 +606,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                         },
                         new std::tuple<Pad *, AppConfig *, AppState *>(state->selectedPad, appCfg, state), // will be deleted by the dialog
                         window,
-                        nullptr,
-                        0,
+                        imgFileFilter,
+                        sizeof(imgFileFilter) / sizeof(imgFileFilter[0]),
                         appCfg->baseRoot.u8string().c_str(),
                         false
                     );
