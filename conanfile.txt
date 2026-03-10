@@ -1,6 +1,6 @@
 [requires]
 sdl/3.4.0
-sdl_mixer/3.1.2
+sdl_mixer/3.2.0
 
 [generators]
 CMakeDeps

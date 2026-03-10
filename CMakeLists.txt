@@ -21,7 +21,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 find_package(SDL3 3.4.0 REQUIRED)
 find_package(SDL3_image 3.4.0 REQUIRED)
-find_package(SDL3_mixer 3.1.2 REQUIRED)
+find_package(SDL3_mixer 3.2.0 REQUIRED)
 
 include_directories(
     vendored/imgui/
@@ -81,7 +81,7 @@ set(CPACK_CREATE_DESKTOP_LINKS ${PROJECT_NAME})
 set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/COPYING)
 install(FILES COPYING DESTINATION share/doc/${PROJECT_NAME})
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl3-0 (>= 3.4.0), libsdl3-mixer0 (>= 3.1.2), libsdl3-image0 (>= 3.4.0), fontconfig")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl3-0 (>= 3.4.0), libsdl3-mixer0 (>= 3.2.0), libsdl3-image0 (>= 3.4.0), fontconfig")
 set(CPACK_DEBIAN_PACKAGE_SECTION sound)
 
 include(CPack)
