@@ -45,7 +45,7 @@ add_executable(${PROJECT_NAME}
 )
 
 if(MSVC)
-    set(WIN32_EXECUTABLE ON)
+    set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
 
 if(UNIX AND NOT APPLE)
