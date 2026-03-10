@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 3.12)
+set(LOCAL_VERSION 1.3.0)
 if(CMAKE_VERSION VERSION_LESS 4.3)
     project(soundpad 
         LANGUAGES C CXX
-        VERSION 1.2.5
+        VERSION ${LOCAL_VERSION}
         HOMEPAGE_URL "https://github.com/faerytea/soundpad"
     )
 else()
     project(soundpad 
         LANGUAGES C CXX
-        VERSION 1.2.5
+        VERSION ${LOCAL_VERSION}
         HOMEPAGE_URL "https://github.com/faerytea/soundpad/"
         SPDX_LICENSE "GPL-3.0-or-later"
     )
@@ -73,7 +74,7 @@ endif()
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set(CPACK_PACKAGE_VENDOR "faerytea")
-set(CPACK_PACKAGE_CONTACT "t.me/faerytea")
+set(CPACK_PACKAGE_CONTACT "faerytea@gmail.com")
 set(CPACK_PACKAGE_DESCRIPTION "Soundpad is a simple soundboard application built with SDL3 and ImGui.")
 
 set(CPACK_CREATE_DESKTOP_LINKS ${PROJECT_NAME})
