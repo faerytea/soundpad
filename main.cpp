@@ -1,6 +1,6 @@
 /**
  * Soundpad - A simple crossplatform soundpad app.
- * Copyright © 2025 faerytea
+ * Copyright © 2025-2026 faerytea
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -145,7 +145,8 @@ const char *aboutContent[] = {
                     "You should have received a copy of the GNU General Public License",
                     "along with this program.  If not, see <https://www.gnu.org/licenses/>.",
                     "Source code: https://github.com/faerytea/soundpad",
-                    "This project uses SDL3, SDL_mixer (both under zlib), and Dear ImGui (MIT License).",
+                    "This project uses SDL3, SDL_image and SDL_mixer (all under zlib), ",
+                    "and Dear ImGui (MIT License).",
                 };
 const Help appAbout = {
     "About Soundpad " SOUNDPAD_VERSION,
