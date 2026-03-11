@@ -29,6 +29,14 @@ else()
     set(PLATFORM_SPECIFIC "")
 endif()
 
+if(NOT ImageMagick_convert_FOUND AND IS_DIRECTORY ${ImageMagick_EXECUTABLE_DIR}) # maybe ImageMagick 7
+	set(ImageMagick_convert_EXECUTABLE ${ImageMagick_EXECUTABLE_DIR}/magick${CMAKE_EXECUTABLE_SUFFIX})
+	set(ImageMagick_convert_FOUND (EXISTS ${ImageMagick_convert_EXECUTABLE}))
+	if(ImageMagick_convert_FOUND)
+		message(STATUS "Found ImageMagick using hacky way")
+	endif()
+endif()
+
 if(ImageMagick_convert_FOUND)
     set(SRC_IMAGE "${PROJECT_SOURCE_DIR}/res/soundpad icon 800.png")
     #get_target_property(APP_OUTPUT_NAME ${PROJECT_NAME} OUTPUT_NAME)
@@ -47,6 +55,7 @@ if(ImageMagick_convert_FOUND)
             DEPENDS ${SRC_IMAGE}
             COMMENT "Generating icon set for ${PROJECT_NAME}"
         )
+		configure_file(${PROJECT_SOURCE_DIR}/res/soundpad.rc.in ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.rc @ONLY)
         install(FILES ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.ico DESTINATION bin)
         set(APP_ICON "\"${PROJECT_NAME}.ico\"")
         set(ICONS ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.rc ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.ico)
@@ -142,7 +151,7 @@ add_executable(${PROJECT_NAME} ${PLATFORM_SPECIFIC}
 
 if(APP_ICON)
     # tell app that we have an icon
-    target_compile_definitions(${PROJECT_NAME} PRIVATE "APP_ICON=${APP_ICON}" "APP_ICON_ALTER=${APP_ICON_ALTER}")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE "APP_ICON=${APP_ICON}")
     if(APP_ICON_ALTER)
         # if we have an alternate icon, tell app about it too
         target_compile_definitions(${PROJECT_NAME} PRIVATE "APP_ICON_ALTER=${APP_ICON_ALTER}")
@@ -184,6 +193,14 @@ set(CPACK_CREATE_DESKTOP_LINKS ${PROJECT_NAME})
 
 set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/COPYING)
 install(FILES COPYING DESTINATION share/doc/${PROJECT_NAME})
+
+# win (nsis) specific
+set(CPACK_NSIS_INSTALLED_ICON_NAME "bin/${PROJECT_NAME}.exe")
+set(CPACK_PACKAGE_ICON "${PROJECT_SOURCE_DIR}/res/soundpad icon 800.png")
+set(CPACK_NSIS_PACKAGE_NAME ${PROJECT_NAME})
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Soundpad")
+set(CPACK_PACKAGE_EXECUTABLES ${PROJECT_NAME} "Soundpad")
+set(CPACK_CREATE_DESKTOP_LINKS ${PROJECT_NAME})
 
 # debian specific
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libsdl3-0 (>= 3.4.0), libsdl3-mixer0 (>= 3.2.0), libsdl3-image0 (>= 3.4.0), fontconfig")
