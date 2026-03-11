@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=@PROJECT_VERSION@
+Name=@PROJECT_NAME@
+Comment=@PROJECT_DESCRIPTION@
+Exec=@PROJECT_NAME@
+Icon=@PROJECT_NAME@
+Terminal=false
+Categories=AudioVideo;Audio;Mixer;Amusement;
