@@ -196,6 +196,24 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(window);
 
+#ifdef APP_ICON
+    const auto exePath = std::filesystem::u8path(SDL_GetBasePath());
+    auto iconSurface = IMG_Load((exePath / APP_ICON).u8string().c_str());
+    if (iconSurface) {
+#ifdef APP_ICON_ALTER
+        auto alt = IMG_Load((exePath / APP_ICON_ALTER).u8string().c_str());
+        if (alt) {
+            SDL_AddSurfaceAlternateImage(iconSurface, alt);
+        } else {
+            SDL_Log("Couldn't load alternate icon: %s", SDL_GetError());
+        }
+#endif
+        SDL_SetWindowIcon(window, iconSurface);
+    } else {
+        SDL_Log("Couldn't load icon: %s", SDL_GetError());
+    }
+#endif
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
